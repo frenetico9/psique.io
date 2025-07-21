@@ -1,6 +1,6 @@
 // IMPORTANTE: Em uma aplicação real, esta chave de API deve ser tratada de forma segura em um backend
 // e não exposta no código do frontend. Para esta demonstração, ela está incluída aqui.
-const API_KEY = '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';
+const API_KEY = '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';
 
 interface OpenRouterMessage {
     role: 'system' | 'user' | 'assistant';
