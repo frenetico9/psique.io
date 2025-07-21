@@ -101,13 +101,14 @@ const PatientScheduleView: React.FC<PatientScheduleViewProps> = ({ setView }) =>
 
         const endTime = new Date(selectedSlot.getTime() + selectedType.duration * 60000);
 
-        const sessionData: Omit<Session, 'id' | 'paymentStatus'> = {
+        const sessionData: Omit<Session, 'id'> = {
             patientId: patientProfile.id,
             professionalId: selectedProfessional.id,
             sessionTypeId: selectedType.id,
             startTime: selectedSlot,
             endTime,
             status: 'scheduled',
+            paymentStatus: 'unpaid',
         };
         
         try {
@@ -295,3 +296,4 @@ const PatientScheduleView: React.FC<PatientScheduleViewProps> = ({ setView }) =>
 const ChatBubbleLeftRightIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.347 17.653 8.5 16.689 8.5 15.553V11.267c0-.97.616-1.813 1.5-2.097m6.25 0a9.023 9.023 0 00-12.5 0" /></svg>;
 
 export default PatientScheduleView;
+    
