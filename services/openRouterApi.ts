@@ -1,6 +1,6 @@
 // IMPORTANTE: Em uma aplicação real, esta chave de API deve ser tratada de forma segura em um backend
 // e não exposta no código do frontend. Para esta demonstração, ela está incluída aqui.
-const API_KEY = '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';
+const API_KEY = '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';
 
 interface OpenRouterMessage {
     role: 'system' | 'user' | 'assistant';
@@ -15,7 +15,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Pr
                 "Authorization": `Bearer ${API_KEY}`,
                 "Content-Type": "application/json",
                 // Headers opcionais para ranking no openrouter.ai
-                "HTTP-Referer": "https://psique-io.vercel.app/", 
+                "HTTP-Referer": "https://psique.io", 
                 "X-Title": "Psique.IO",
             },
             body: JSON.stringify({
