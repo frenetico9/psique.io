@@ -19,7 +19,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Pr
                 "X-Title": "Psique.IO",
             },
             body: JSON.stringify({
-                "model": "deepseek/deepseek-r1-0528:free",
+                "model": "google/gemma-3n-e2b-it:free",
                 "messages": messages,
             })
         });
