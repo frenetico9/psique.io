@@ -24,7 +24,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Pr
             },
             body: JSON.stringify({
                 // Using a known-working free model to ensure stability, as requested model might not be available.
-                "model": "google/gemma-2b-it:free",
+                "model": "deepseek/deepseek-r1-0528:free",
                 "messages": messages,
             })
         });
