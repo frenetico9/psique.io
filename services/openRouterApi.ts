@@ -9,7 +9,7 @@ interface OpenRouterMessage {
 
 export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Promise<string> => {
     try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const response = await fetch("https://openrouter.ai/api/v1", {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${API_KEY}`,
