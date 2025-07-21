@@ -8,7 +8,7 @@ const openRouterApi = axios.create({
   headers: {
     'Authorization': `Bearer ${API_KEY}`,
     'Content-Type': 'application/json',
-    'HTTP-Referer': 'http://localhost', // As per user instruction
+    'HTTP-Referer': 'https://psique-io.vercel.app/', // As per user instruction
     'X-Title': 'MeuSistemaTS', // As per user instruction
   }
 });
