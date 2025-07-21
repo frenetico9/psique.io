@@ -1,6 +1,6 @@
 // IMPORTANTE: Em uma aplicação real, esta chave de API deve ser tratada de forma segura em um backend
 // e não exposta no código do frontend. Para esta demonstração, ela está incluída aqui.
-const API_KEY = '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';
+const API_KEY = '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';
 
 interface OpenRouterMessage {
     role: 'system' | 'user' | 'assistant';
@@ -19,7 +19,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Pr
                 "X-Title": "Psique.IO",
             },
             body: JSON.stringify({
-                "model": "deepseek/deepseek-r1-0528:free",
+                "model": "moonshotai/kimi-k2:free",
                 "messages": messages,
             })
         });
