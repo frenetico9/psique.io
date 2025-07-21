@@ -15,7 +15,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Pr
                 "Authorization": `Bearer ${API_KEY}`,
                 "Content-Type": "application/json",
                 // Headers opcionais para ranking no openrouter.ai
-                "HTTP-Referer": "https://psique.io", 
+                "HTTP-Referer": "https://psique-io.vercel.app/", 
                 "X-Title": "Psique.IO",
             },
             body: JSON.stringify({
