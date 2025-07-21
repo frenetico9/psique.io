@@ -98,8 +98,14 @@ Comece a conversa com a mensagem de boas-vindas.`;
         setIsLoading(true);
 
         const systemMessage = { role: 'system' as const, content: getSystemPrompt(currentUser.name) };
+
+        // The API requires the conversation to start with a user message after the system prompt.
+        // We add the hidden initial prompt to every request to maintain the correct alternating sequence.
+        const initialUserPrompt = { role: 'user' as const, content: 'Inicie a conversa.' };
+
         const messagesForApi = [
             systemMessage,
+            initialUserPrompt,
             ...chatHistory.map(msg => ({
                 role: (msg.sender === 'ai' ? 'assistant' : 'user') as 'assistant' | 'user',
                 content: msg.text
