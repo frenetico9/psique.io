@@ -1,45 +1,50 @@
 // IMPORTANTE: Em uma aplicação real, esta chave de API deve ser tratada de forma segura em um backend
 // e não exposta no código do frontend. Para esta demonstração, ela está incluída aqui.
-const API_KEY = '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';
+const ARLIAI_API_KEY = '19285904-92bc-4679-9e1f-5fe49fcbc5ce';
 
 interface OpenRouterMessage {
     role: 'system' | 'user' | 'assistant';
     content: string;
 }
 
+/**
+ * NOTE: This function now calls the ArliAI API.
+ * The name is kept for compatibility with existing components to minimize changes.
+ */
 export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Promise<string> => {
     try {
-        const response = await fetch("https://openrouter.ai/api/v1", {
+        const response = await fetch("https://api.arliai.com/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Authorization": `Bearer ${API_KEY}`,
+                "Authorization": `Bearer ${ARLIAI_API_KEY}`,
                 "Content-Type": "application/json",
-                // Headers opcionais para ranking no openrouter.ai
-                "HTTP-Referer": "https://psique-io.vercel.app/", 
-                "X-Title": "Psique.IO",
             },
             body: JSON.stringify({
-                "model": "qwen3-235b-a22b-07-25:free",
+                "model": "Gemma-3-27B-ArliAI-RPMax-v3",
                 "messages": messages,
             })
         });
 
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error("OpenRouter API Error:", response.status, errorBody);
+            console.error("ArliAI API Error:", response.status, errorBody);
             throw new Error(`Erro na API: ${response.statusText}`);
         }
 
         const data = await response.json();
         
+        // Assuming an OpenAI-compatible response structure.
+        // This is a common pattern for chat completion APIs.
         if (data.choices && data.choices.length > 0 && data.choices[0].message?.content) {
             return data.choices[0].message.content;
         }
 
-        throw new Error("A API não retornou uma resposta válida.");
+        // The user did not specify the response format. If the above assumption is wrong,
+        // the application might not display the AI response correctly.
+        throw new Error("A API não retornou uma resposta em um formato esperado.");
 
     } catch (error) {
-        console.error("Falha ao obter resposta do OpenRouter:", error);
+        console.error("Falha ao obter resposta da ArliAI:", error);
         // Re-lança o erro para que o componente que chamou possa tratá-lo
         throw error;
     }
