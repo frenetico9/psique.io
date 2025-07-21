@@ -4,7 +4,7 @@ const API_KEY = 'sk-or-v1-adcc9d8a730beacead65bbf3856c0316fa3dfb8946408122781e48
 const MODEL_ID = 'deepseek/deepseek-r1-0528:free';
 
 const openRouterApi = axios.create({
-  baseURL: 'https://openrouter.ai/api/v1',
+  baseURL: 'https://openrouter.ai/api/v1/chat/completions',
   headers: {
     'Authorization': `Bearer ${API_KEY}`,
     'Content-Type': 'application/json',
