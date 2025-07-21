@@ -1,6 +1,7 @@
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { GoogleGenAI, Chat } from '@google/genai';
+import { getOpenRouterCompletion } from '../../services/openRouterApi';
 import { Message, PatientView } from '../../types';
 import Button from '../ui/Button';
 import UserAvatar from '../ui/UserAvatar';
@@ -14,11 +15,11 @@ interface AIConsultationViewProps {
 
 const AIConsultationView: React.FC<AIConsultationViewProps> = ({ setView }) => {
     const { state, dispatch } = useAppContext();
-    const { currentUser, chat, chatHistory, patients } = state;
+    const { currentUser, chatHistory, patients } = state;
 
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isInitializing, setIsInitializing] = useState(true);
+    const [isInitializing, setIsInitializing] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -27,36 +28,14 @@ const AIConsultationView: React.FC<AIConsultationViewProps> = ({ setView }) => {
         return patients.find(p => p.id === currentUser.patientProfileId);
     }, [currentUser, patients]);
 
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [chatHistory]);
-
-    useEffect(() => {
-        const initializeChat = async () => {
-            if (!currentUser || patientProfile?.aiConsultationCompleted) {
-                setIsInitializing(false);
-                return;
-            };
-            setIsInitializing(true);
-            try {
-                if (!process.env.API_KEY) {
-                    console.error("API Key not found");
-                    if (chatHistory.length === 0) {
-                      dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: 'Desculpe, a configuração do assistente AI não foi encontrada. Por favor, contate o suporte.' }});
-                    }
-                    setIsInitializing(false);
-                    return;
-                }
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-                
-                const systemInstruction = `Você é a Psique (pronuncia-se 'Pí-si-quê'), uma IA psicóloga assistente, projetada para realizar uma primeira conversa de acolhimento com os pacientes da plataforma Psique.IO. Seu tom é calmo, empático, profissional e acolhedor. Você está conversando com ${currentUser?.name}.
+    const getSystemPrompt = (userName: string) => `Você é a Psique (pronuncia-se 'Pí-si-quê'), uma IA psicóloga assistente, projetada para realizar uma primeira conversa de acolhimento com os pacientes da plataforma Psique.IO. Seu tom é calmo, empático, profissional e acolhedor. Você está conversando com ${userName}.
 
 Seu objetivo principal é conduzir uma entrevista inicial para coletar informações preliminares que ajudarão o psicólogo humano na primeira consulta. Você deve guiar a conversa de forma estruturada, fazendo uma pergunta de cada vez.
 
 **Estrutura da Conversa:**
 
 1.  **Boas-vindas e Consentimento:**
-    -   Comece se apresentando e explicando o propósito da conversa: "Olá, ${currentUser?.name}. Eu sou a Psique, sua assistente de IA para o primeiro contato. Nossa conversa inicial é confidencial e tem como objetivo me ajudar a entender um pouco sobre você, para que sua primeira sessão com um de nossos psicólogos seja o mais produtiva possível. Podemos começar?"
+    -   Comece se apresentando e explicando o propósito da conversa: "Olá, ${userName}. Eu sou a Psique, sua assistente de IA para o primeiro contato. Nossa conversa inicial é confidencial e tem como objetivo me ajudar a entender um pouco sobre você, para que sua primeira sessão com um de nossos psicólogos seja o mais produtiva possível. Podemos começar?"
     -   Aguarde a confirmação do usuário para prosseguir.
 
 2.  **Entrevista Guiada (Faça uma pergunta por vez):**
@@ -70,7 +49,7 @@ Seu objetivo principal é conduzir uma entrevista inicial para coletar informaç
 
 3.  **Encerramento:**
     -   Quando sentir que tem informações suficientes, encerre a conversa de forma positiva.
-    -   Diga: "Agradeço muito por compartilhar tudo isso comigo, ${currentUser?.name}. Suas respostas foram salvas de forma segura e confidencial, e serão de grande ajuda para o profissional que irá te atender. O próximo passo é agendar sua primeira consulta. Você pode fazer isso quando se sentir pronto(a)."
+    -   Diga: "Agradeço muito por compartilhar tudo isso comigo, ${userName}. Suas respostas foram salvas de forma segura e confidencial, e serão de grande ajuda para o profissional que irá te atender. O próximo passo é agendar sua primeira consulta. Você pode fazer isso quando se sentir pronto(a)."
     -   Após esta mensagem final, não faça mais perguntas. Se o usuário continuar, apenas reforce que o próximo passo é agendar a consulta.
 
 **Regras e Limitações (MUITO IMPORTANTE):**
@@ -81,45 +60,36 @@ Seu objetivo principal é conduzir uma entrevista inicial para coletar informaç
 -   **Não saia do roteiro:** Mantenha-se focado no objetivo da entrevista. Se o usuário desviar muito do assunto, gentilmente o traga de volta com frases como "Agradeço por me contar isso. Voltando à nossa conversa, você mencionou que...".
 
 Comece a conversa com a mensagem de boas-vindas.`;
+    
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [chatHistory]);
 
-                const newChat: Chat = ai.chats.create({
-                    model: 'gemini-2.5-flash',
-                    config: {
-                        systemInstruction: systemInstruction,
-                    },
-                });
-                dispatch({ type: 'SET_CHAT_OBJECT', payload: newChat });
-
-                if (chatHistory.length === 0) {
-                    const response = await newChat.sendMessageStream({ message: "Inicie a conversa." });
-                    let initialMessageText = '';
-                    dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: '' } });
-
-                    for await (const chunk of response) {
-                        initialMessageText += chunk.text;
-                        dispatch({ type: 'UPDATE_LAST_CHAT_MESSAGE', payload: initialMessageText });
-                    }
-                }
+    useEffect(() => {
+        const initializeChat = async () => {
+            if (!currentUser || patientProfile?.aiConsultationCompleted || chatHistory.length > 0) {
+                setIsInitializing(false);
+                return;
+            }
+            setIsInitializing(true);
+            try {
+                const systemMessage = { role: 'system' as const, content: getSystemPrompt(currentUser.name) };
+                const startMessage = { role: 'user' as const, content: "Inicie a conversa." };
+                const firstAiResponse = await getOpenRouterCompletion([systemMessage, startMessage]);
+                dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: firstAiResponse } });
             } catch (error) {
                 console.error("Error initializing AI Chat:", error);
-                if (chatHistory.length === 0) {
-                  dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: 'Ocorreu um erro ao iniciar o assistente. Tente novamente mais tarde.' } });
-                }
+                dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: 'Ocorreu um erro ao iniciar o assistente. Tente novamente mais tarde.' } });
             } finally {
                 setIsInitializing(false);
             }
         };
-
-        if (currentUser && !chat) {
-            initializeChat();
-        } else {
-            setIsInitializing(false);
-        }
+        initializeChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser, chat, patientProfile]);
+    }, [currentUser, patientProfile]);
 
     const handleSend = async () => {
-        if (!input.trim() || !chat || isLoading || isInitializing) return;
+        if (!input.trim() || isLoading || isInitializing || !currentUser) return;
 
         const userMessage: Message = { sender: 'user', text: input };
         dispatch({ type: 'ADD_CHAT_MESSAGE', payload: userMessage });
@@ -127,20 +97,26 @@ Comece a conversa com a mensagem de boas-vindas.`;
         setInput('');
         setIsLoading(true);
 
-        try {
-            const responseStream = await chat.sendMessageStream({ message: currentInput });
-            let currentAiMessage = '';
-            dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: '' } });
+        const systemMessage = { role: 'system' as const, content: getSystemPrompt(currentUser.name) };
+        const messagesForApi = [
+            systemMessage,
+            ...chatHistory.map(msg => ({
+                role: (msg.sender === 'ai' ? 'assistant' : 'user') as 'assistant' | 'user',
+                content: msg.text
+            })),
+            { role: 'user' as const, content: currentInput }
+        ];
 
-            for await (const chunk of responseStream) {
-                currentAiMessage += chunk.text;
-                dispatch({ type: 'UPDATE_LAST_CHAT_MESSAGE', payload: currentAiMessage });
-            }
+        try {
+            const aiResponseText = await getOpenRouterCompletion(messagesForApi);
+            const aiMessage: Message = { sender: 'ai', text: aiResponseText };
+            dispatch({ type: 'ADD_CHAT_MESSAGE', payload: aiMessage });
             
-            const isFinalMessage = currentAiMessage.includes("Agradeço muito por compartilhar tudo isso comigo");
-            if (isFinalMessage && currentUser?.patientProfileId) {
+            const isFinalMessage = aiResponseText.includes("Agradeço muito por compartilhar tudo isso comigo");
+            if (isFinalMessage && currentUser.patientProfileId) {
+                const finalHistory = [...chatHistory, userMessage, aiMessage];
                 try {
-                    const updatedPatient = await saveAiConsultationResult(currentUser.patientProfileId, [...chatHistory, userMessage, { sender: 'ai', text: currentAiMessage }]);
+                    const updatedPatient = await saveAiConsultationResult(currentUser.patientProfileId, finalHistory);
                     dispatch({ type: 'UPDATE_PATIENT', payload: updatedPatient });
                 } catch (error) {
                     console.error("Failed to save AI consultation", error);
@@ -158,6 +134,8 @@ Comece a conversa com a mensagem de boas-vindas.`;
     const handleConfirmNewChat = () => {
         dispatch({ type: 'CLEAR_CHAT' });
         setIsConfirmModalOpen(false);
+        // The useEffect will re-initialize the chat
+        setIsInitializing(true); 
     };
     
     const renderContent = () => {

@@ -1,6 +1,6 @@
 
 import React, { createContext, useReducer, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { AppState, Action, User, Message, Chat } from '../types';
+import { AppState, Action, User, Message } from '../types';
 import { getAllData } from '../services/mockApi';
 
 const initialState: AppState = {
@@ -13,7 +13,6 @@ const initialState: AppState = {
     professionals: [],
     loading: true,
     error: null,
-    chat: null,
     chatHistory: [],
 };
 
@@ -80,21 +79,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
              return { ...state, notifications: [action.payload, ...state.notifications] };
 
         // Chat
-        case 'SET_CHAT_OBJECT':
-            return { ...state, chat: action.payload };
         case 'ADD_CHAT_MESSAGE':
             return { ...state, chatHistory: [...state.chatHistory, action.payload] };
-        case 'UPDATE_LAST_CHAT_MESSAGE': {
-            const newHistory = [...state.chatHistory];
-            if (newHistory.length > 0) {
-                const lastMessage = { ...newHistory[newHistory.length - 1] };
-                lastMessage.text = action.payload;
-                newHistory[newHistory.length - 1] = lastMessage;
-            }
-            return { ...state, chatHistory: newHistory };
-        }
         case 'CLEAR_CHAT':
-            return { ...state, chat: null, chatHistory: [] };
+            return { ...state, chatHistory: [] };
 
         default:
             return state;

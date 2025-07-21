@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { ClinicalNote } from '../../types';
-import { GoogleGenAI, Type, GenerateContentResponse } from '@google/genai';
+import { getOpenRouterCompletion } from '../../services/openRouterApi';
 import Button from '../ui/Button';
 import Skeleton from '../ui/Skeleton';
 
@@ -25,54 +26,29 @@ const AIClinicalSummary: React.FC<AIClinicalSummaryProps> = ({ notes, patientNam
         setError(null);
         setSummary(null);
 
-        if (!process.env.API_KEY) {
-            setError("Chave de API não configurada.");
-            setIsLoading(false);
-            return;
-        }
-
         const notesContent = notes
             .map(note => `Data: ${new Date(note.createdAt).toLocaleDateString('pt-BR')}\nAnotação: ${note.content}`)
             .join('\n\n---\n\n');
 
-        const systemInstruction = `Você é um assistente de IA para psicólogos. Sua tarefa é analisar as anotações clínicas de um paciente e fornecer um resumo estruturado em JSON.
+        const prompt = `Você é um assistente de IA para psicólogos. Sua tarefa é analisar as anotações clínicas de um paciente e fornecer um resumo estruturado em JSON.
         Seja conciso, profissional e baseie-se estritamente nas informações fornecidas. Não invente detalhes.
-        O paciente se chama ${patientName}.`;
+        O paciente se chama ${patientName}.
 
-        const contents = `Com base nas seguintes anotações clínicas, gere um resumo. Anotações:\n\n${notesContent}`;
+        A saída DEVE ser um objeto JSON válido com a seguinte estrutura:
+        {
+            "summary": "Um resumo conciso do progresso geral do paciente, com no máximo 4 frases.",
+            "themes": ["Uma lista de 3 a 5 temas ou tópicos principais que aparecem repetidamente nas anotações."],
+            "suggestions": ["Uma lista de 2 a 3 sugestões de pontos a serem explorados ou técnicas a serem consideradas na próxima sessão, com base nos temas identificados."]
+        }
+
+        Com base nas seguintes anotações clínicas, gere o resumo JSON. Anotações:\n\n${notesContent}`;
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const response: GenerateContentResponse = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: contents,
-                config: {
-                    systemInstruction: systemInstruction,
-                    responseMimeType: 'application/json',
-                    responseSchema: {
-                        type: Type.OBJECT,
-                        properties: {
-                            summary: {
-                                type: Type.STRING,
-                                description: "Um resumo conciso do progresso geral do paciente, com no máximo 4 frases.",
-                            },
-                            themes: {
-                                type: Type.ARRAY,
-                                description: "Uma lista de 3 a 5 temas ou tópicos principais que aparecem repetidamente nas anotações.",
-                                items: { type: Type.STRING },
-                            },
-                            suggestions: {
-                                type: Type.ARRAY,
-                                description: "Uma lista de 2 a 3 sugestões de pontos a serem explorados ou técnicas a serem consideradas na próxima sessão, com base nos temas identificados.",
-                                items: { type: Type.STRING },
-                            },
-                        },
-                        required: ["summary", "themes", "suggestions"],
-                    },
-                },
-            });
+            const responseText = await getOpenRouterCompletion([{ role: 'user', content: prompt }]);
             
-            const jsonText = response.text.trim();
+            // The model might wrap the JSON in markdown backticks.
+            const jsonText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
             const parsedSummary: AISummary = JSON.parse(jsonText);
             setSummary(parsedSummary);
 

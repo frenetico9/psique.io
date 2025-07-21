@@ -1,7 +1,4 @@
 
-import { Chat } from '@google/genai';
-
-export { Chat };
 
 // User & Auth
 export interface User {
@@ -97,7 +94,6 @@ export interface AppState {
     professionals: User[];
     loading: boolean;
     error: string | null;
-    chat: Chat | null;
     chatHistory: Message[];
 }
 
@@ -119,9 +115,7 @@ export type Action =
   | { type: 'DELETE_SESSION_TYPE'; payload: string }
   | { type: 'ADD_CLINICAL_NOTE'; payload: ClinicalNote }
   | { type: 'ADD_NOTIFICATION'; payload: Notification }
-  | { type: 'SET_CHAT_OBJECT'; payload: Chat | null }
   | { type: 'ADD_CHAT_MESSAGE'; payload: Message }
-  | { type: 'UPDATE_LAST_CHAT_MESSAGE'; payload: string }
   | { type: 'CLEAR_CHAT' };
 
 // Form Data Types
