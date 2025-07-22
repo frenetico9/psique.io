@@ -1,7 +1,5 @@
-
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { GoogleGenAI } from '@google/genai';
+import { getOpenRouterCompletion } from '../../services/openRouterApi';
 import { Message, PatientView } from '../../types';
 import Button from '../ui/Button';
 import UserAvatar from '../ui/UserAvatar';
@@ -27,8 +25,6 @@ const AIConsultationView: React.FC<AIConsultationViewProps> = ({ setView }) => {
         if (!currentUser || !currentUser.patientProfileId) return null;
         return patients.find(p => p.id === currentUser.patientProfileId);
     }, [currentUser, patients]);
-    
-    const ai = useMemo(() => new GoogleGenAI({ apiKey: process.env.API_KEY }), []);
 
     const getSystemPrompt = (userName: string) => `Você é a Psique (pronuncia-se 'Pí-si-quê'), uma IA psicóloga assistente, projetada para realizar uma primeira conversa de acolhimento com os pacientes da plataforma Psique.IO. Seu tom é calmo, empático, profissional e acolhedor. Você está conversando com ${userName}.
 
@@ -76,14 +72,11 @@ Comece a conversa com a mensagem de boas-vindas.`;
             setIsInitializing(true);
             try {
                 const systemInstruction = getSystemPrompt(currentUser.name);
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: "Inicie a conversa.",
-                    config: {
-                        systemInstruction,
-                    },
-                });
-                const firstAiResponse = response.text;
+                const messages = [
+                    { role: 'system' as const, content: systemInstruction },
+                    { role: 'user' as const, content: "Olá, pode iniciar a conversa." }
+                ];
+                const firstAiResponse = await getOpenRouterCompletion(messages);
                 dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: firstAiResponse } });
             } catch (error) {
                 console.error("Error initializing AI Chat:", error);
@@ -94,7 +87,28 @@ Comece a conversa com a mensagem de boas-vindas.`;
         };
         initializeChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser, patientProfile, ai]);
+    }, [currentUser, patientProfile]);
+    
+    useEffect(() => {
+        const lastMessage = chatHistory.length > 0 ? chatHistory[chatHistory.length - 1] : null;
+        if (lastMessage &&
+            lastMessage.sender === 'ai' &&
+            lastMessage.text.includes("Agradeço muito por compartilhar tudo isso comigo") &&
+            currentUser?.patientProfileId &&
+            !patientProfile?.aiConsultationCompleted) {
+
+            const saveResult = async () => {
+                try {
+                    const updatedPatient = await saveAiConsultationResult(currentUser.patientProfileId!, chatHistory);
+                    dispatch({ type: 'UPDATE_PATIENT', payload: updatedPatient });
+                } catch (error) {
+                    console.error("Failed to save AI consultation", error);
+                }
+            };
+
+            saveResult();
+        }
+    }, [chatHistory, currentUser, patientProfile, dispatch]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading || isInitializing || !currentUser) return;
@@ -107,35 +121,19 @@ Comece a conversa com a mensagem de boas-vindas.`;
 
         try {
             const systemInstruction = getSystemPrompt(currentUser.name);
-            const contents = [
+            const messages = [
+                { role: 'system' as const, content: systemInstruction },
                 ...chatHistory.map(msg => ({
-                    role: msg.sender === 'user' ? 'user' : 'model',
-                    parts: [{ text: msg.text }]
+                    role: msg.sender === 'user' ? 'user' : ('assistant' as 'user' | 'assistant'),
+                    content: msg.text
                 })),
-                { role: 'user', parts: [{ text: currentInput }] }
+                { role: 'user' as const, content: currentInput }
             ];
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents,
-                config: {
-                    systemInstruction,
-                },
-            });
-            const aiResponseText = response.text;
+            const aiResponseText = await getOpenRouterCompletion(messages);
             const aiMessage: Message = { sender: 'ai', text: aiResponseText };
             dispatch({ type: 'ADD_CHAT_MESSAGE', payload: aiMessage });
-            
-            const isFinalMessage = aiResponseText.includes("Agradeço muito por compartilhar tudo isso comigo");
-            if (isFinalMessage && currentUser.patientProfileId) {
-                const finalHistory = [...chatHistory, userMessage, aiMessage];
-                try {
-                    const updatedPatient = await saveAiConsultationResult(currentUser.patientProfileId, finalHistory);
-                    dispatch({ type: 'UPDATE_PATIENT', payload: updatedPatient });
-                } catch (error) {
-                    console.error("Failed to save AI consultation", error);
-                }
-            }
+
         } catch (error) {
             console.error("Error sending message:", error);
             const errorMsg: Message = { sender: 'ai', text: 'Desculpe, não consegui processar sua mensagem. Tente novamente.' };
