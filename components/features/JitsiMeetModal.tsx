@@ -42,7 +42,10 @@ const JitsiMeetModal: React.FC<JitsiMeetModalProps> = ({ session, currentUser, o
     const api = new window.JitsiMeetExternalAPI(domain, options);
     jitsiApiRef.current = api;
 
-    api.addEventListener('videoConferenceLeft', () => {
+    // Use 'readyToClose' instead of 'videoConferenceLeft'.
+    // 'videoConferenceLeft' is triggered by the auth flow when clicking "I am the host",
+    // which incorrectly closes our modal. 'readyToClose' is fired only on explicit hangup.
+    api.addEventListener('readyToClose', () => {
         onClose();
     });
 
