@@ -28,12 +28,12 @@ const AIConsultationView: React.FC<AIConsultationViewProps> = ({ setView }) => {
     }, [currentUser, patients]);
 
     const getSystemPrompt = (userName: string, userTurns: number = 0) => {
-        // After the user's 4th substantive response (5th total message including the "start" confirmation), the AI must conclude.
-        const shouldConclude = userTurns >= 5;
+        // After the user's 3rd substantive response (4th total message including the "start" confirmation), the AI must conclude.
+        const shouldConclude = userTurns >= 4;
     
         const conclusionInstruction = shouldConclude
-            ? `Você já coletou informações suficientes (${userTurns -1} respostas do usuário). **É OBRIGATÓRIO que você encerre a conversa AGORA na sua PRÓXIMA resposta.**`
-            : `Após ter uma boa visão geral (geralmente após 4 a 5 perguntas no total), você deve encerrar a conversa.`;
+            ? `Você já coletou informações suficientes (${userTurns - 1} respostas do usuário, o que é suficiente). **É ABSOLUTAMENTE OBRIGATÓRIO que você encerre a conversa AGORA na sua PRÓXIMA resposta, sem fazer mais perguntas.**`
+            : `Após ter uma boa visão geral (geralmente após 3 a 4 perguntas no total), você deve encerrar a conversa.`;
     
         return `Você é a Psique (pronuncia-se 'Pí-si-quê'), uma IA psicóloga assistente, projetada para realizar uma primeira conversa de acolhimento com os pacientes da plataforma Psique.IO. Seu tom é calmo, empático, profissional e acolhedor. Você está conversando com ${userName}.
 
