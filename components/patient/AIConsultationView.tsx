@@ -1,7 +1,7 @@
 
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { getOpenRouterCompletion } from '../../services/openRouterApi';
+import { GoogleGenAI } from '@google/genai';
 import { Message, PatientView } from '../../types';
 import Button from '../ui/Button';
 import UserAvatar from '../ui/UserAvatar';
@@ -27,6 +27,8 @@ const AIConsultationView: React.FC<AIConsultationViewProps> = ({ setView }) => {
         if (!currentUser || !currentUser.patientProfileId) return null;
         return patients.find(p => p.id === currentUser.patientProfileId);
     }, [currentUser, patients]);
+    
+    const ai = useMemo(() => new GoogleGenAI({ apiKey: process.env.API_KEY }), []);
 
     const getSystemPrompt = (userName: string) => `Você é a Psique (pronuncia-se 'Pí-si-quê'), uma IA psicóloga assistente, projetada para realizar uma primeira conversa de acolhimento com os pacientes da plataforma Psique.IO. Seu tom é calmo, empático, profissional e acolhedor. Você está conversando com ${userName}.
 
@@ -73,9 +75,15 @@ Comece a conversa com a mensagem de boas-vindas.`;
             }
             setIsInitializing(true);
             try {
-                const systemMessage = { role: 'system' as const, content: getSystemPrompt(currentUser.name) };
-                const startMessage = { role: 'user' as const, content: "Inicie a conversa." };
-                const firstAiResponse = await getOpenRouterCompletion([systemMessage, startMessage]);
+                const systemInstruction = getSystemPrompt(currentUser.name);
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: "Inicie a conversa.",
+                    config: {
+                        systemInstruction,
+                    },
+                });
+                const firstAiResponse = response.text;
                 dispatch({ type: 'ADD_CHAT_MESSAGE', payload: { sender: 'ai', text: firstAiResponse } });
             } catch (error) {
                 console.error("Error initializing AI Chat:", error);
@@ -86,7 +94,7 @@ Comece a conversa com a mensagem de boas-vindas.`;
         };
         initializeChat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentUser, patientProfile]);
+    }, [currentUser, patientProfile, ai]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading || isInitializing || !currentUser) return;
@@ -97,24 +105,24 @@ Comece a conversa com a mensagem de boas-vindas.`;
         setInput('');
         setIsLoading(true);
 
-        const systemMessage = { role: 'system' as const, content: getSystemPrompt(currentUser.name) };
-
-        // The API requires the conversation to start with a user message after the system prompt.
-        // We add the hidden initial prompt to every request to maintain the correct alternating sequence.
-        const initialUserPrompt = { role: 'user' as const, content: 'Inicie a conversa.' };
-
-        const messagesForApi = [
-            systemMessage,
-            initialUserPrompt,
-            ...chatHistory.map(msg => ({
-                role: (msg.sender === 'ai' ? 'assistant' : 'user') as 'assistant' | 'user',
-                content: msg.text
-            })),
-            { role: 'user' as const, content: currentInput }
-        ];
-
         try {
-            const aiResponseText = await getOpenRouterCompletion(messagesForApi);
+            const systemInstruction = getSystemPrompt(currentUser.name);
+            const contents = [
+                ...chatHistory.map(msg => ({
+                    role: msg.sender === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.text }]
+                })),
+                { role: 'user', parts: [{ text: currentInput }] }
+            ];
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents,
+                config: {
+                    systemInstruction,
+                },
+            });
+            const aiResponseText = response.text;
             const aiMessage: Message = { sender: 'ai', text: aiResponseText };
             dispatch({ type: 'ADD_CHAT_MESSAGE', payload: aiMessage });
             

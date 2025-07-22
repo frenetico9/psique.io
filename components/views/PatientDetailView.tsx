@@ -1,5 +1,6 @@
 
-import React, { useMemo, useState } from 'react';
+
+import React, { useMemo, useState, useEffect } from 'react';
 import { Patient, Session, ClinicalNote, ClinicalNoteFormData } from '../../types';
 import { useAppContext } from '../../context/AppContext';
 import { addClinicalNote } from '../../services/mockApi';
@@ -211,13 +212,56 @@ const StatCard: React.FC<{icon: React.ReactNode, title: string, value: string | 
     </div>
 );
 
+const PatientDetailSkeleton = () => (
+    <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-2">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <Skeleton className="h-9 w-64 rounded-md" />
+        </div>
+
+        {/* Patient Info Banner */}
+        <Skeleton className="h-28 rounded-lg" />
+
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+            <div className="flex space-x-6">
+                <Skeleton className="h-8 w-24 mb-2 rounded" />
+                <Skeleton className="h-8 w-20 mb-2 rounded" />
+                <Skeleton className="h-8 w-32 mb-2 rounded" />
+            </div>
+        </div>
+        
+        {/* Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Skeleton className="h-24 rounded-lg" />
+                <Skeleton className="h-24 rounded-lg" />
+                <Skeleton className="h-24 rounded-lg" />
+                <Skeleton className="h-24 rounded-lg" />
+            </div>
+            <Skeleton className="h-64 rounded-lg" />
+            <div className="lg:col-span-2"><Skeleton className="h-64 rounded-lg" /></div>
+        </div>
+    </div>
+);
+
 
 const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patientId, onBack }) => {
-    const { state } = useAppContext();
+    const { state, dispatch } = useAppContext();
     const { sessions, sessionTypes, clinicalNotes, patients, loading } = state;
     const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'notes' | 'ai_consultation' | 'ai_summary'>('overview');
+    const toast = useToast();
 
     const patient = useMemo(() => patients.find(p => p.id === patientId), [patients, patientId]);
+
+    useEffect(() => {
+        // Se o carregamento terminou e o paciente não foi encontrado, volta para a lista.
+        if (!loading && !patient) {
+            toast('Paciente não encontrado.', 'error');
+            onBack();
+        }
+    }, [loading, patient, onBack, toast]);
 
     const patientData = useMemo(() => {
         if (!patient) return { sessions: [], notes: [] };
@@ -236,9 +280,11 @@ const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patientId, onBack
         return { sessions: patientSessions, notes: patientNotes };
     }, [sessions, sessionTypes, clinicalNotes, patient]);
 
-    if (loading) return <Skeleton className="w-full h-96" />;
-    if (!patient) return <div className="text-center py-10">Paciente não encontrado. <Button onClick={onBack}>Voltar</Button></div>;
-
+    // Usa o estado de carregamento global. Se o paciente ainda não estiver carregado, mostra o esqueleto.
+    if (loading || !patient) {
+        return <PatientDetailSkeleton />;
+    }
+    
     const tabs = [
         { id: 'overview', label: 'Visão Geral' },
         { id: 'sessions', label: 'Sessões' },
@@ -367,14 +413,14 @@ const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patientId, onBack
     );
 };
 
+// --- ICONS ---
+const SparklesIcon: React.FC<{className?: string}> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" className={className || "h-6 w-6"} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>;
+const ChatBubbleLeftRightIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.347 17.653 8.5 16.689 8.5 15.553V11.267c0-.97.616-1.813 1.5-2.097m6.25 0a9.023 9.023 0 00-12.5 0M15.5 10.125c-.621 0-1.125.504-1.125 1.125s.504 1.125 1.125 1.125S16.625 11.754 16.625 11.25s-.504-1.125-1.125-1.125zM12 10.125c-.621 0-1.125.504-1.125 1.125s.504 1.125 1.125 1.125S13.125 11.754 13.125 11.25s-.504-1.125-1.125-1.125zM8.5 10.125c-.621 0-1.125.504-1.125 1.125s.504 1.125 1.125 1.125S9.625 11.754 9.625 11.25s-.504-1.125-1.125-1.125z" /></svg>;
 const ArrowLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>;
-const ListBulletIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 6.75zM3 12a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 12zm0 5.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clipRule="evenodd" /></svg>;
+const ListBulletIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M3 6.75A.75.75 0 013.75 6h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 6.75zM3 12a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 013 12zm0 5.25a.75.75 0 01.75-.75h16.5a.75.75 0 010 1.5H3.75A.75.75 0 01-.75-.75z" clipRule="evenodd" /></svg>;
 const CheckBadgeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0112 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 013.498 1.307 4.491 4.491 0 011.307 3.497A4.49 4.49 0 0121.75 12c0 1.357-.6 2.573-1.549 3.397a4.49 4.49 0 01-1.307 3.498 4.491 4.491 0 01-3.497 1.307A4.49 4.49 0 0112 21.75c-1.357 0-2.573-.6-3.397-1.549a4.49 4.49 0 01-3.498-1.307 4.491 4.491 0 01-1.307-3.497A4.49 4.49 0 012.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 011.307-3.498 4.491 4.491 0 013.497-1.307zm7.007 6.387a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" /></svg>;
 const CalendarDaysIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M12.75 12.75a.75.75 0 00-1.5 0v2.25H9a.75.75 0 000 1.5h2.25V18a.75.75 0 001.5 0v-2.25H15a.75.75 0 000-1.5h-2.25v-2.25z" /><path fillRule="evenodd" d="M1.5 4.5a3 3 0 013-3h15a3 3 0 013 3v15a3 3 0 01-3-3h-15a3 3 0 01-3-3v-15zM3 6a1.5 1.5 0 011.5-1.5h15A1.5 1.5 0 0121 6v13.5a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 19.5V6z" clipRule="evenodd" /></svg>;
 const UserPlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path d="M6.25 6.375a4.125 4.125 0 118.25 0 4.125 4.125 0 01-8.25 0zM3.25 19.125a7.125 7.125 0 0114.25 0v.003l-.001.119a.75.75 0 01-.363.63 13.067 13.067 0 01-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 01-.364-.63l-.001-.12v-.003zM16 12.75a.75.75 0 00-1.5 0v2.25h-2.25a.75.75 0 000 1.5h2.25v2.25a.75.75 0 001.5 0v-2.25h2.25a.75.75 0 000-1.5h-2.25V12.75z" /></svg>;
 const DocumentTextIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}><path fillRule="evenodd" d="M5.25 2.25A2.25 2.25 0 003 4.5v15A2.25 2.25 0 005.25 21.75h13.5A2.25 2.25 0 0021 19.5V4.5A2.25 2.25 0 0018.75 2.25H5.25zM6.75 6a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9a.75.75 0 01-.75-.75zm.75 4.5a.75.75 0 000 1.5h9a.75.75 0 000-1.5h-9zM6 15a.75.75 0 01.75-.75h9a.75.75 0 010 1.5h-9A.75.75 0 016 15z" clipRule="evenodd" /></svg>;
-const SparklesIcon: React.FC<{className?: string}> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" className={className || "h-6 w-6"} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>;
-const ChatBubbleLeftRightIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.347 17.653 8.5 16.689 8.5 15.553V11.267c0-.97.616-1.813 1.5-2.097m6.25 0a9.023 9.023 0 00-12.5 0M15.5 10.125c-.621 0-1.125.504-1.125 1.125s.504 1.125 1.125 1.125S16.625 11.754 16.625 11.25s-.504-1.125-1.125-1.125zM12 10.125c-.621 0-1.125.504-1.125 1.125s.504 1.125 1.125 1.125S13.125 11.754 13.125 11.25s-.504-1.125-1.125-1.125zM8.5 10.125c-.621 0-1.125.504-1.125 1.125s.504 1.125 1.125 1.125S9.625 11.754 9.625 11.25s-.504-1.125-1.125-1.125z" /></svg>;
-
 
 export default PatientDetailView;
