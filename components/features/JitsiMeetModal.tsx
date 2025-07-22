@@ -1,76 +1,36 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import ReactDOM from 'react-dom';
 import { Session, User } from '../../types';
 
-interface JitsiMeetModalProps {
+interface VideoCallModalProps {
   session: Session;
   currentUser: User;
   onClose: () => void;
 }
 
-const JitsiMeetModal: React.FC<JitsiMeetModalProps> = ({ session, currentUser, onClose }) => {
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
-  const jitsiApiRef = useRef<any>(null);
-
-  useEffect(() => {
-    if (!jitsiContainerRef.current || !session) return;
-
-    const domain = "meet.jit.si";
-    const options = {
-      roomName: session.id,
-      parentNode: jitsiContainerRef.current,
-      width: '100%',
-      height: '100%',
-      configOverwrite: {
-        startWithAudioMuted: false,
-        startWithVideoMuted: false,
-        prejoinPageEnabled: false,
-      },
-      interfaceConfigOverwrite: {
-        TOOLBAR_BUTTONS: [
-          'microphone', 'camera', 'desktop', 'fullscreen',
-          'hangup', 'profile', 'chat', 'settings', 'tileview'
-        ],
-        SHOW_JITSI_WATERMARK: false,
-        SHOW_WATERMARK_FOR_GUESTS: false,
-      },
-      userInfo: {
-        displayName: currentUser.name,
-      }
-    };
-
-    const api = new window.JitsiMeetExternalAPI(domain, options);
-    jitsiApiRef.current = api;
-
-    // Use 'readyToClose' instead of 'videoConferenceLeft'.
-    // 'videoConferenceLeft' is triggered by the auth flow when clicking "I am the host",
-    // which incorrectly closes our modal. 'readyToClose' is fired only on explicit hangup.
-    api.addEventListener('readyToClose', () => {
-        onClose();
-    });
-
-    return () => {
-      jitsiApiRef.current?.dispose();
-    };
-  }, [session, currentUser.name, onClose]);
-  
-  const handleLeave = () => {
-      if (jitsiApiRef.current) {
-          jitsiApiRef.current.executeCommand('hangup');
-      } else {
-          onClose();
-      }
-  }
+const VideoCallModal: React.FC<VideoCallModalProps> = ({ session, currentUser, onClose }) => {
+  // Construct the Mirotalk URL dynamically
+  // Room name based on session ID for uniqueness
+  const roomName = session.id.replace(/[^a-zA-Z0-9-_]/g, ''); // Sanitize room name
+  // URL-encode the user's name to handle spaces and special characters
+  const userName = encodeURIComponent(currentUser.name);
+  const miroTalkUrl = `https://sfu.mirotalk.com/${roomName}?username=${userName}&audio=1&video=1`;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-50 bg-gray-900 flex flex-col animate-fade-in">
         <header className="flex-shrink-0 bg-gray-800 p-3 flex justify-between items-center text-white">
             <h2 className="text-lg font-bold">Sessão de Videoconferência</h2>
-            <button onClick={handleLeave} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                Sair da Chamada
+            <button onClick={onClose} className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                Encerrar e Fechar
             </button>
         </header>
-        <main ref={jitsiContainerRef} className="flex-1 w-full h-full"></main>
+        <main className="flex-1 w-full h-full bg-black">
+           <iframe
+              src={miroTalkUrl}
+              allow="camera; microphone; fullscreen; display-capture"
+              style={{ width: '100%', height: '100%', border: 'none' }}
+            />
+        </main>
          <style>{`
             @keyframes fade-in {
                 from { opacity: 0; }
@@ -83,4 +43,4 @@ const JitsiMeetModal: React.FC<JitsiMeetModalProps> = ({ session, currentUser, o
   );
 };
 
-export default JitsiMeetModal;
+export default VideoCallModal;
