@@ -38,7 +38,7 @@ let patients: Patient[] = [
 
 // --- SESSION TYPES ---
 let sessionTypes: SessionType[] = [
-    { id: 'st_contact', name: 'Primeiro Contato', description: 'Uma sessão inicial mais curta para alinhamento e conhecimento mútuo.', duration: 30, price: 0, color: 'orange' },
+    { id: 'st_contact', name: 'Primeiro Contato', description: 'Uma sessão inicial mais curta para alinhamento e conhecimento mútuo.', duration: 30, price: 100, color: 'orange' },
     { id: 'st_therapy', name: 'Sessão de Terapia', description: 'Sessão padrão de acompanhamento psicoterapêutico.', duration: 50, price: 180, color: 'indigo' },
     { id: 'st_couple', name: 'Terapia de Casal', description: 'Sessão focada na dinâmica e comunicação do casal.', duration: 80, price: 250, color: 'pink' },
 ];
