@@ -14,12 +14,25 @@ interface OpenRouterMessage {
     content: string;
 }
 
-export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Promise<string> => {
+export const getOpenRouterCompletion = async (messages: OpenRouterMessage[], jsonMode: boolean = false): Promise<string> => {
     try {
         // Alterna a chave a cada 2 solicitações
         const keyIndex = Math.floor(requestCount / 2) % API_KEYS.length;
         const apiKey = API_KEYS[keyIndex];
         requestCount++;
+
+        const requestBody: {
+            model: string;
+            messages: OpenRouterMessage[];
+            response_format?: { type: string };
+        } = {
+            model: jsonMode ? "deepseek/deepseek-coder" : "deepseek/deepseek-chat",
+            messages: messages,
+        };
+
+        if (jsonMode) {
+            requestBody.response_format = { "type": "json_object" };
+        }
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
@@ -30,10 +43,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[]): Pr
                 "HTTP-Referer": "https://psique-io.vercel.app/", 
                 "X-Title": "Psique.IO",
             },
-            body: JSON.stringify({
-                "model": "deepseek/deepseek-r1-0528:free",
-                "messages": messages,
-            })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
