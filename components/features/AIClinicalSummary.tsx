@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { ClinicalNote } from '../../types';
-import { GoogleGenAI, Type } from "@google/genai";
+import { getOpenRouterCompletion } from '../../services/openRouterApi';
 import Button from '../ui/Button';
 import Skeleton from '../ui/Skeleton';
 
@@ -30,57 +29,34 @@ const AIClinicalSummary: React.FC<AIClinicalSummaryProps> = ({ notes, patientNam
             .map(note => `Data: ${new Date(note.createdAt).toLocaleDateString('pt-BR')}\nAnotação: ${note.content}`)
             .join('\n\n---\n\n');
 
-        const prompt = `Você é um assistente de IA para psicólogos. Sua tarefa é analisar as anotações clínicas de um paciente e fornecer um resumo estruturado.
-Seja conciso, profissional e baseie-se estritamente nas informações fornecidas. Não invente detalhes.
-O paciente se chama ${patientName}.
-
-Analise as seguintes anotações clínicas e extraia um resumo, temas principais e sugestões para a próxima sessão.
+        const systemPrompt = `Você é um assistente de IA para psicólogos. Sua tarefa é analisar anotações clínicas e retornar um resumo estruturado em formato JSON. Seja conciso, profissional e baseie-se estritamente nas informações fornecidas. Não invente detalhes.`;
+        
+        const userPrompt = `Analise as seguintes anotações clínicas para o paciente ${patientName}.
     
-Anotações:\n\n${notesContent}`;
+Anotações:
+---
+${notesContent}
+---
+
+Retorne um objeto JSON com as seguintes chaves:
+- "summary": Um resumo conciso do progresso geral do paciente (máximo de 4 frases).
+- "themes": Uma lista de 3 a 5 temas ou tópicos principais que aparecem repetidamente nas anotações.
+- "suggestions": Uma lista de 2 a 3 sugestões de pontos a serem explorados ou técnicas a serem consideradas na próxima sessão, com base nos temas identificados.`;
+
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+            const messages = [
+                { role: 'system' as const, content: systemPrompt },
+                { role: 'user' as const, content: userPrompt }
+            ];
             
-            const responseSchema = {
-                type: Type.OBJECT,
-                properties: {
-                    summary: {
-                        type: Type.STRING,
-                        description: "Um resumo conciso do progresso geral do paciente, com no máximo 4 frases.",
-                    },
-                    themes: {
-                        type: Type.ARRAY,
-                        description: "Uma lista de 3 a 5 temas ou tópicos principais que aparecem repetidamente nas anotações.",
-                        items: {
-                            type: Type.STRING,
-                        },
-                    },
-                    suggestions: {
-                        type: Type.ARRAY,
-                        description: "Uma lista de 2 a 3 sugestões de pontos a serem explorados ou técnicas a serem consideradas na próxima sessão, com base nos temas identificados.",
-                        items: {
-                            type: Type.STRING,
-                        },
-                    },
-                },
-                required: ['summary', 'themes', 'suggestions']
-            };
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema,
-                },
-            });
-            const jsonText = response.text.trim();
-            const parsedSummary: AISummary = JSON.parse(jsonText);
+            const jsonResponse = await getOpenRouterCompletion(messages, true); // true for JSON mode
+            const parsedSummary: AISummary = JSON.parse(jsonResponse);
             setSummary(parsedSummary);
 
         } catch (err) {
             console.error("Error generating summary:", err);
-            setError("Não foi possível gerar o resumo. Verifique o formato das anotações ou tente novamente.");
+            setError("Não foi possível gerar o resumo. A resposta da IA pode não ser um JSON válido ou a API pode estar indisponível. Tente novamente.");
         } finally {
             setIsLoading(false);
         }
