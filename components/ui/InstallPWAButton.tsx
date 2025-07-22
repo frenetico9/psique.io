@@ -6,15 +6,16 @@ const InstallPWAButton: React.FC = () => {
 
     useEffect(() => {
         const handleBeforeInstallPrompt = (e: Event) => {
+            // Prevent the browser's default mini-infobar from appearing
             e.preventDefault();
-            // Show the button only if the app is not already installed
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
-            if (!isStandalone) {
-                setDeferredPrompt(e);
-            }
+            
+            // The 'beforeinstallprompt' event is only fired by the browser when the app is installable and not yet installed.
+            // Stash the event so it can be triggered later.
+            setDeferredPrompt(e);
         };
 
         const handleAppInstalled = () => {
+            // The app has been installed, so we should hide the button.
             setDeferredPrompt(null);
         };
         
@@ -31,8 +32,19 @@ const InstallPWAButton: React.FC = () => {
         if (!deferredPrompt) {
             return;
         }
+        // Show the browser's installation prompt.
         deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
+        
+        // We can optionally wait for the user's choice.
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        // The 'appinstalled' event will handle hiding the button,
+        // but we can clear it here as a fallback.
+        if (outcome === 'accepted') {
+            console.log('User accepted the PWA installation');
+        } else {
+            console.log('User dismissed the PWA installation');
+        }
         setDeferredPrompt(null);
     };
 
