@@ -1,7 +1,5 @@
 
-
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { PatientView } from '../../types';
 import { useAppContext } from '../../context/AppContext';
 import UserAvatar from '../ui/UserAvatar';
@@ -10,6 +8,7 @@ import PatientSessionsView from './PatientSessionsView';
 import PatientProfileView from './PatientProfileView';
 import PatientScheduleView from './PatientScheduleView';
 import AIConsultationView from './AIConsultationView';
+import NotificationPanel from '../ui/NotificationPanel';
 
 // --- Bottom Navigation Component for Mobile ---
 const BottomNav: React.FC<{
@@ -48,13 +47,31 @@ const BottomNav: React.FC<{
 
 const PatientApp: React.FC = () => {
   const [activeView, setActiveView] = useState<PatientView>('dashboard');
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { state, dispatch } = useAppContext();
   const { currentUser, notifications } = state;
+
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
   const handleLogout = () => {
       dispatch({ type: 'LOGOUT' });
   };
   
+  const handleMarkOneRead = (id: string) => {
+    dispatch({ type: 'MARK_NOTIFICATIONS_READ', payload: [id] });
+  };
+
+  const handleMarkAllRead = () => {
+    dispatch({ type: 'MARK_ALL_NOTIFICATIONS_READ' });
+  };
+  
+  const handleNotificationNavigate = (link?: string) => {
+      if (link) {
+          setActiveView(link as PatientView);
+      }
+      setIsNotificationsOpen(false);
+  }
+
   const navItems: { id: PatientView; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Início', icon: <HomeIcon /> },
     { id: 'schedule', label: 'Agendar', icon: <CalendarPlusIcon /> },
@@ -118,10 +135,16 @@ const PatientApp: React.FC = () => {
 
                 {/* User Menu */}
                 <div className="flex items-center space-x-2 sm:space-x-4">
-                    <button className="p-2 rounded-full text-gray-500 hover:bg-gray-100 relative" title="Notificações">
-                       <BellIcon />
-                       {notifications.length > 0 && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />}
-                    </button>
+                    <div className="relative">
+                        <button onClick={() => setIsNotificationsOpen(o => !o)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 relative" title="Notificações">
+                           <BellIcon />
+                           {unreadCount > 0 && 
+                                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold ring-2 ring-white">
+                                    {unreadCount}
+                                </span>
+                            }
+                        </button>
+                    </div>
                     <div className="h-10 w-10">
                         <UserAvatar name={currentUser.name} />
                     </div>
@@ -136,6 +159,15 @@ const PatientApp: React.FC = () => {
         {renderView()}
       </main>
       <BottomNav activeView={activeView} onNavigate={setActiveView} />
+      
+      <NotificationPanel 
+          isOpen={isNotificationsOpen}
+          notifications={notifications}
+          onMarkOneRead={handleMarkOneRead}
+          onMarkAllRead={handleMarkAllRead}
+          onNavigate={handleNotificationNavigate}
+          onClose={() => setIsNotificationsOpen(false)}
+      />
     </div>
   );
 };

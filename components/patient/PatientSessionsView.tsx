@@ -8,6 +8,7 @@ import { updateSession } from '../../services/mockApi';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import PaymentModal from './PaymentModal';
+import JitsiMeetModal from '../features/JitsiMeetModal';
 
 const statusBadge: Record<Session['status'], string> = {
     scheduled: "bg-blue-100 text-blue-800",
@@ -59,11 +60,12 @@ const StarRating: React.FC<{
 
 const PatientSessionsView: React.FC = () => {
     const { state, dispatch } = useAppContext();
-    const { sessions, sessionTypes, loading } = state;
+    const { sessions, sessionTypes, loading, currentUser } = state;
     const toast = useToast();
     
     const [cancellingSession, setCancellingSession] = useState<Session | null>(null);
     const [payingSession, setPayingSession] = useState<Session | null>(null);
+    const [meetingSession, setMeetingSession] = useState<Session | null>(null);
 
     const { upcomingSessions, pastSessions } = useMemo(() => {
         const now = new Date();
@@ -108,7 +110,7 @@ const PatientSessionsView: React.FC = () => {
         toast('Pagamento realizado com sucesso!', 'success');
     }
 
-    if (loading) return <SessionsSkeleton />;
+    if (loading || !currentUser) return <SessionsSkeleton />;
 
     return (
         <div className="space-y-8">
@@ -116,7 +118,7 @@ const PatientSessionsView: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-800 mb-4">Próximas Sessões</h1>
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 divide-y divide-gray-200">
                     {upcomingSessions.length > 0 ? upcomingSessions.map(session => (
-                        <SessionItem key={session.id} session={session} sessionTypes={sessionTypes} onCancel={() => setCancellingSession(session)} />
+                        <SessionItem key={session.id} session={session} sessionTypes={sessionTypes} onCancel={() => setCancellingSession(session)} onJoin={setMeetingSession} />
                     )) : (
                         <p className="text-center p-8 text-gray-500">Nenhuma sessão futura encontrada.</p>
                     )}
@@ -149,6 +151,13 @@ const PatientSessionsView: React.FC = () => {
                     onSuccess={handlePaymentSuccess}
                 />
             )}
+             {meetingSession && currentUser && (
+                <JitsiMeetModal
+                    session={meetingSession}
+                    currentUser={currentUser}
+                    onClose={() => setMeetingSession(null)}
+                />
+             )}
         </div>
     );
 };
@@ -159,11 +168,17 @@ const SessionItem: React.FC<{
     onCancel?: () => void, 
     onRate?: (session: Session, rating: number) => void,
     onPay?: (session: Session) => void,
-}> = ({ session, sessionTypes, onCancel, onRate, onPay }) => {
+    onJoin?: (session: Session) => void,
+}> = ({ session, sessionTypes, onCancel, onRate, onPay, onJoin }) => {
     const sessionType = sessionTypes.find(st => st.id === session.sessionTypeId);
     const sessionTypeName = sessionType?.name || 'Sessão';
 
-    const isCancellable = session.status === 'scheduled' && onCancel;
+    const now = new Date().getTime();
+    const startTime = new Date(session.startTime).getTime();
+    const tenMinutesBefore = startTime - 10 * 60 * 1000;
+
+    const canJoin = session.status === 'scheduled' && onJoin;
+    const isCancellable = session.status === 'scheduled' && onCancel && now < tenMinutesBefore;
     const isRateable = session.status === 'completed' && !session.satisfaction && onRate;
     const isPayable = session.status === 'completed' && session.paymentStatus === 'unpaid' && onPay;
     
@@ -191,7 +206,13 @@ const SessionItem: React.FC<{
                     </div>
                  )}
             </div>
-            <div className="flex items-center gap-4 self-end sm:self-center flex-wrap">
+            <div className="flex items-center gap-2 sm:gap-4 self-end sm:self-center flex-wrap">
+                {canJoin && (
+                    <Button onClick={() => onJoin(session)} size="sm" className="bg-green-500 hover:bg-green-600">
+                        <VideoCameraIcon />
+                        Entrar na Chamada
+                    </Button>
+                )}
                 {session.status === 'completed' && (
                      session.paymentStatus === 'paid' 
                         ? <span className="px-3 py-1 text-xs font-semibold rounded-full bg-teal-100 text-teal-800">Pago</span>
@@ -231,6 +252,7 @@ const SessionsSkeleton = () => (
     </div>
 )
 
+const VideoCameraIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5 mr-1" }) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path d="M3.25 4A2.25 2.25 0 001 6.25v7.5A2.25 2.25 0 003.25 16h7.5A2.25 2.25 0 0013 13.75v-7.5A2.25 2.25 0 0010.75 4h-7.5zM15.5 5.75a.75.75 0 00-1.5 0v2.551l-1.42-1.066a.75.75 0 00-.962 1.28l1.75 1.313a.75.75 0 00.962 0l1.75-1.312a.75.75 0 00-.962-1.28L15.5 8.301V5.75z" /></svg>;
 const StarIcon: React.FC<{className: string}> = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>;
 
 export default PatientSessionsView;

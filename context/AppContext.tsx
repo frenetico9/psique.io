@@ -1,6 +1,7 @@
 
+
 import React, { createContext, useReducer, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { AppState, Action, User, Message } from '../types';
+import { AppState, Action, User, Message, Notification, Patient } from '../types';
 import { getAllData } from '../services/mockApi';
 
 const initialState: AppState = {
@@ -76,7 +77,25 @@ const appReducer = (state: AppState, action: Action): AppState => {
             
         // Notifications
         case 'ADD_NOTIFICATION':
+             // Prevent duplicate reminder notifications
+            if (state.notifications.some(n => n.id === action.payload.id)) {
+                return state;
+            }
              return { ...state, notifications: [action.payload, ...state.notifications] };
+        case 'MARK_NOTIFICATIONS_READ':
+            return {
+                ...state,
+                notifications: state.notifications.map(n =>
+                    action.payload.includes(n.id) ? { ...n, read: true } : n
+                ),
+            };
+        case 'MARK_ALL_NOTIFICATIONS_READ':
+            return {
+                ...state,
+                notifications: state.notifications.map(n => 
+                    n.userId === state.currentUser?.id ? { ...n, read: true } : n
+                ),
+            };
 
         // Chat
         case 'ADD_CHAT_MESSAGE':
@@ -92,6 +111,69 @@ const appReducer = (state: AppState, action: Action): AppState => {
 export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     const [state, dispatch] = useReducer(appReducer, initialState);
 
+    const checkAndCreateReminders = useCallback((user: User, data: { sessions: AppState['sessions'], notifications: AppState['notifications'], patients: Patient[], professionals: User[] }) => {
+        const { sessions, notifications: currentNotifications, patients, professionals } = data;
+        const now = new Date().getTime();
+        const oneHour = 60 * 60 * 1000;
+        const twentyFourHours = 24 * oneHour;
+
+        const remindersToAdd: Notification[] = [];
+
+        sessions.forEach(session => {
+            if (session.status === 'scheduled') {
+                const startTime = new Date(session.startTime).getTime();
+                const timeDiff = startTime - now;
+                const sessionTime = new Date(session.startTime).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+
+                let message24h = '';
+                let message1h = '';
+
+                if (user.role === 'professional') {
+                    const patient = patients.find(p => p.id === session.patientId);
+                    const patientName = patient ? patient.name.split(' ')[0] : 'seu paciente';
+                    message24h = `Lembrete: Sua sessão com ${patientName} é amanhã às ${sessionTime}.`;
+                    message1h = `Sua sessão com ${patientName} começa em menos de uma hora, às ${sessionTime}.`;
+                } else { // patient
+                    const professional = professionals.find(p => p.id === session.professionalId);
+                    const professionalName = professional ? professional.name : 'seu/sua profissional';
+                    message24h = `Lembrete: Sua sessão com ${professionalName} é amanhã às ${sessionTime}.`;
+                    message1h = `Sua sessão com ${professionalName} começa em menos de uma hora, às ${sessionTime}.`;
+                }
+
+                // 24-hour reminder
+                const reminder24hId = `reminder_24h_${session.id}`;
+                if (timeDiff > 0 && timeDiff < twentyFourHours && !currentNotifications.some(n => n.id === reminder24hId)) {
+                    remindersToAdd.push({
+                        id: reminder24hId,
+                        userId: user.id,
+                        message: message24h,
+                        read: false,
+                        createdAt: new Date(),
+                        link: user.role === 'professional' ? 'calendar' : 'sessions'
+                    });
+                }
+
+                // 1-hour reminder
+                const reminder1hId = `reminder_1h_${session.id}`;
+                if (timeDiff > 0 && timeDiff < oneHour && !currentNotifications.some(n => n.id === reminder1hId)) {
+                     remindersToAdd.push({
+                        id: reminder1hId,
+                        userId: user.id,
+                        message: message1h,
+                        read: false,
+                        createdAt: new Date(),
+                        link: user.role === 'professional' ? 'calendar' : 'sessions'
+                    });
+                }
+            }
+        });
+        
+        remindersToAdd.forEach(reminder => {
+            dispatch({ type: 'ADD_NOTIFICATION', payload: reminder });
+        });
+
+    }, [dispatch]);
+
     useEffect(() => {
         const fetchUserData = async (user: User) => {
             dispatch({ type: 'FETCH_START' });
@@ -99,6 +181,8 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
                 const data = await getAllData(user);
                 dispatch({ type: 'FETCH_SUCCESS', payload: data });
                 localStorage.setItem('psiqueUser', JSON.stringify(user));
+                // After data is fetched, check for reminders
+                checkAndCreateReminders(user, data);
             } catch (error) {
                 const errorMessage = error instanceof Error ? error.message : 'Failed to fetch data';
                 dispatch({ type: 'FETCH_ERROR', payload: errorMessage });
@@ -106,13 +190,13 @@ export const AppProvider: React.FC<{children: ReactNode}> = ({ children }) => {
             }
         };
 
-        if (state.currentUser && !state.sessions.length) { // Only fetch if data is not present
+        if (state.currentUser && state.loading) { // Only fetch if data is not present or loading is true
             fetchUserData(state.currentUser);
         } else if (!state.currentUser) {
             localStorage.removeItem('psiqueUser');
             // State is reset by the reducer on LOGOUT
         }
-    }, [state.currentUser, state.sessions.length]);
+    }, [state.currentUser, state.loading, checkAndCreateReminders]);
 
 
     return (

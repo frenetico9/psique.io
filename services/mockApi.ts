@@ -1,4 +1,5 @@
 
+
 import { Patient, SessionType, Session, ClinicalNote, User, PatientFormData, Notification, Message, SessionTypeFormData, ClinicalNoteFormData } from '../types';
 
 // --- MOCK DATA STORE ---
@@ -177,6 +178,34 @@ export const addSession = async (data: Omit<Session, 'id'>, user: User): Promise
     await delay(300);
     const newSession: Session = { ...data, id: generateId('sess') };
     sessions.push(newSession);
+    
+    // --- Notification Logic ---
+    const sessionTime = new Date(newSession.startTime).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+
+    if (user.role === 'professional') {
+        // Professional scheduled, notify patient
+        const patientUser = users.find(u => u.patientProfileId === newSession.patientId);
+        if (patientUser) {
+            notifications.unshift({
+                id: generateId('notif'),
+                userId: patientUser.id,
+                message: `${user.name} agendou uma nova sessão para você em ${sessionTime}.`,
+                read: false,
+                createdAt: new Date(),
+                link: 'sessions'
+            });
+        }
+    } else { // Patient scheduled, notify professional
+        notifications.unshift({
+            id: generateId('notif'),
+            userId: newSession.professionalId,
+            message: `${user.name} agendou uma nova sessão em ${sessionTime}.`,
+            read: false,
+            createdAt: new Date(),
+            link: 'calendar'
+        });
+    }
+
     return JSON.parse(JSON.stringify(newSession));
 };
 
@@ -184,15 +213,49 @@ export const updateSession = async (data: Session): Promise<Session> => {
     await delay(300);
     const index = sessions.findIndex(s => s.id === data.id);
     if (index > -1) {
+        const oldSession = sessions[index];
         sessions[index] = JSON.parse(JSON.stringify(data));
+
+        // --- Notification Logic for Cancellation ---
+        if (data.status === 'cancelled_patient' && oldSession.status !== 'cancelled_patient') {
+            const patient = patients.find(p => p.id === data.patientId);
+            if (patient) {
+                notifications.unshift({
+                    id: generateId('notif'),
+                    userId: data.professionalId,
+                    message: `${patient.name} cancelou a sessão do dia ${new Date(data.startTime).toLocaleDateString('pt-BR')}.`,
+                    read: false,
+                    createdAt: new Date(),
+                    link: 'calendar'
+                });
+            }
+        }
         return { ...sessions[index] };
     }
     throw new Error('Sessão não encontrada.');
 };
 
-export const deleteSession = async (id: string): Promise<void> => {
+export const deleteSession = async (id: string, user: User): Promise<void> => {
     await delay(300);
-    sessions = sessions.filter(s => s.id !== id);
+    const sessionIndex = sessions.findIndex(s => s.id === id);
+    if (sessionIndex > -1) {
+        const sessionToDelete = sessions[sessionIndex];
+        // --- Notification Logic for Deletion by Professional ---
+        if (user.role === 'professional' && sessionToDelete.status === 'scheduled') {
+            const patientUser = users.find(u => u.patientProfileId === sessionToDelete.patientId);
+            if(patientUser) {
+                 notifications.unshift({
+                    id: generateId('notif'),
+                    userId: patientUser.id,
+                    message: `Sua sessão do dia ${new Date(sessionToDelete.startTime).toLocaleDateString('pt-BR')} foi cancelada por ${user.name}.`,
+                    read: false,
+                    createdAt: new Date(),
+                    link: 'sessions'
+                });
+            }
+        }
+        sessions.splice(sessionIndex, 1);
+    }
 };
 
 // Patients

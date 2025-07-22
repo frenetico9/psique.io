@@ -1,5 +1,11 @@
 
 
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI: any;
+  }
+}
+
 // User & Auth
 export interface User {
   id: string;
@@ -115,6 +121,8 @@ export type Action =
   | { type: 'DELETE_SESSION_TYPE'; payload: string }
   | { type: 'ADD_CLINICAL_NOTE'; payload: ClinicalNote }
   | { type: 'ADD_NOTIFICATION'; payload: Notification }
+  | { type: 'MARK_NOTIFICATIONS_READ'; payload: string[] }
+  | { type: 'MARK_ALL_NOTIFICATIONS_READ' }
   | { type: 'ADD_CHAT_MESSAGE'; payload: Message }
   | { type: 'CLEAR_CHAT' };
 

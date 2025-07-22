@@ -158,7 +158,12 @@ const PatientScheduleView: React.FC<PatientScheduleViewProps> = ({ setView }) =>
                                 className={`p-4 rounded-lg border-2 text-left transition-all duration-200 ${selectedType?.id === type.id ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-300' : 'border-gray-200'} ${isDisabled ? 'opacity-60 cursor-not-allowed bg-gray-50' : 'hover:border-indigo-400'}`}
                             >
                                 <div className="flex justify-between items-start">
-                                    <p className="font-bold text-gray-800">{type.name}</p>
+                                    <p className="font-bold text-gray-800 flex items-center gap-2">
+                                        {type.name} 
+                                        <span className="text-xs font-normal text-indigo-600 bg-indigo-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                            <VideoCameraIcon className="w-3 h-3"/> Online
+                                        </span>
+                                    </p>
                                     {isDisabled && <span className="text-xs font-semibold text-gray-600 bg-gray-200 px-2 py-0.5 rounded-full">Já realizado</span>}
                                 </div>
                                 <p className="text-sm text-gray-600 h-10">{type.description}</p>
@@ -242,21 +247,33 @@ const PatientScheduleView: React.FC<PatientScheduleViewProps> = ({ setView }) =>
 
             {isConfirming && selectedSlot && selectedType && selectedProfessional && (
                 <Modal isOpen={isConfirming} onClose={() => setIsConfirming(false)} title="Confirmar Agendamento">
-                    <div>
-                        <p className="text-gray-600 mb-1">Você está agendando:</p>
-                        <p className="text-lg font-bold text-indigo-700">{selectedType.name}</p>
-                        <p className="mt-4 text-gray-600 mb-1">Profissional:</p>
-                        <p className="text-lg font-bold text-gray-800">{selectedProfessional.name}</p>
-                        <p className="mt-4 text-gray-600 mb-1">Data e Hora:</p>
-                        <p className="text-lg font-bold text-gray-800">
-                           {selectedSlot.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-                           <span className="font-semibold"> às </span>
-                           {selectedSlot.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                         <p className="mt-4 text-gray-600 mb-1">Valor:</p>
-                        <p className={`text-lg font-bold ${selectedType.price > 0 ? 'text-green-600' : 'text-indigo-600'}`}>
-                            {selectedType.price > 0 ? selectedType.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Gratuito'}
-                        </p>
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-sm font-medium text-gray-500">Você está agendando:</p>
+                            <p className="text-lg font-bold text-indigo-700">{selectedType.name}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-gray-500">Profissional:</p>
+                            <p className="text-lg font-bold text-gray-800">{selectedProfessional.name}</p>
+                        </div>
+                        <div>
+                           <p className="text-sm font-medium text-gray-500">Data e Hora:</p>
+                           <p className="text-lg font-bold text-gray-800">
+                               {selectedSlot.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                               <span className="font-semibold"> às </span>
+                               {selectedSlot.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                           </p>
+                        </div>
+                        <div className="bg-indigo-50 p-3 rounded-lg flex items-center gap-2">
+                           <VideoCameraIcon className="w-5 h-5 text-indigo-600" />
+                           <p className="text-sm font-semibold text-indigo-800">Formato: Atendimento Online</p>
+                        </div>
+                         <div>
+                            <p className="text-sm font-medium text-gray-500">Valor:</p>
+                            <p className={`text-lg font-bold ${selectedType.price > 0 ? 'text-green-600' : 'text-indigo-600'}`}>
+                                {selectedType.price > 0 ? selectedType.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'Gratuito'}
+                            </p>
+                         </div>
                     </div>
                      <div className="flex justify-end space-x-3 pt-6">
                         <Button variant="secondary" onClick={() => setIsConfirming(false)} disabled={isLoading}>Cancelar</Button>
@@ -293,7 +310,7 @@ const PatientScheduleView: React.FC<PatientScheduleViewProps> = ({ setView }) =>
     )
 }
 
+const VideoCameraIcon: React.FC<{ className?: string }> = ({ className = "w-5 h-5" }) => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path d="M3.25 4A2.25 2.25 0 001 6.25v7.5A2.25 2.25 0 003.25 16h7.5A2.25 2.25 0 0013 13.75v-7.5A2.25 2.25 0 0010.75 4h-7.5zM15.5 5.75a.75.75 0 00-1.5 0v2.551l-1.42-1.066a.75.75 0 00-.962 1.28l1.75 1.313a.75.75 0 00.962 0l1.75-1.312a.75.75 0 00-.962-1.28L15.5 8.301V5.75z" /></svg>;
 const ChatBubbleLeftRightIcon: React.FC<{ className?: string }> = ({ className = "w-6 h-6" }) => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a.75.75 0 01-1.06 0l-3.72-3.72C9.347 17.653 8.5 16.689 8.5 15.553V11.267c0-.97.616-1.813 1.5-2.097m6.25 0a9.023 9.023 0 00-12.5 0" /></svg>;
 
 export default PatientScheduleView;
-    

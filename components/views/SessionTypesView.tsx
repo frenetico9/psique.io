@@ -21,7 +21,8 @@ const PricingPlanCard: React.FC<{
     'Atendimento personalizado',
     'Acesso à plataforma do paciente',
     'Suporte via chat (horário comercial)',
-    billingCycle === 'package' ? 'Sessões semanais garantidas' : 'Flexibilidade de agendamento'
+    billingCycle === 'package' ? 'Sessões semanais garantidas' : 'Flexibilidade de agendamento',
+    'Atendimento 100% online'
   ];
 
   const price = billingCycle === 'package' ? st.price * 4 * 0.9 : st.price;
@@ -47,7 +48,7 @@ const PricingPlanCard: React.FC<{
         <ul className="space-y-3">
           {features.map((feature, i) => (
             <li key={i} className="flex items-center">
-              <CheckIcon />
+              {feature.includes('online') ? <VideoCameraIcon /> : <CheckIcon />}
               <span className="text-sm text-gray-600 ml-3">{feature}</span>
             </li>
           ))}
@@ -204,5 +205,7 @@ const PlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-
 const TagIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a2 2 0 012 2v5a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2zm0 0v18" /></svg>;
 const CheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
 const TrashIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>;
+const VideoCameraIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-indigo-500 flex-shrink-0"><path d="M3.25 4A2.25 2.25 0 001 6.25v7.5A2.25 2.25 0 003.25 16h7.5A2.25 2.25 0 0013 13.75v-7.5A2.25 2.25 0 0010.75 4h-7.5zM15.5 5.75a.75.75 0 00-1.5 0v2.551l-1.42-1.066a.75.75 0 00-.962 1.28l1.75 1.313a.75.75 0 00.962 0l1.75-1.312a.75.75 0 00-.962-1.28L15.5 8.301V5.75z" /></svg>;
+
 
 export default PricingView;
