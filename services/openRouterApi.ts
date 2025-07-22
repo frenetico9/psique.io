@@ -3,8 +3,8 @@
 // IMPORTANTE: Em uma aplicação real, estas chaves de API devem ser tratadas de forma segura em um backend
 // e não expostas no código do frontend. Para esta demonstração, ela está incluída aqui.
 const API_KEYS = [
-    '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',
-    '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',
+    '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',
+    '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',
     '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' // ← terceira chave aqui
 ];
 
@@ -27,7 +27,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[], jso
             messages: OpenRouterMessage[];
             response_format?: { type: string };
         } = {
-            model: jsonMode ? "deepseek/deepseek-r1-0528:free" : "deepseek/deepseek-r1-0528:free",
+            model: "deepseek/deepseek-r1-0528:free",
             messages: messages,
         };
 
