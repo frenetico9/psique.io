@@ -1,11 +1,3 @@
-
-
-declare global {
-  interface Window {
-    JitsiMeetExternalAPI: any;
-  }
-}
-
 // User & Auth
 export interface User {
   id: string;
