@@ -27,7 +27,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[], jso
             messages: OpenRouterMessage[];
             response_format?: { type: string };
         } = {
-            model: jsonMode ? "deepseek/deepseek-coder" : "deepseek/deepseek-chat",
+            model: jsonMode ? "deepseek/deepseek-r1-0528:free" : "deepseek/deepseek-r1-0528:free",
             messages: messages,
         };
 
