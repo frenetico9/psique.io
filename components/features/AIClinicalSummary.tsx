@@ -15,6 +15,17 @@ interface AISummary {
     suggestions: string[];
 }
 
+const extractJsonFromString = (text: string): string => {
+    // Matches a JSON block wrapped in ```json ... ``` or just ``` ... ```
+    const match = text.match(/```(?:json)?\s*([\s\S]+?)\s*```/);
+    if (match && match[1]) {
+        return match[1].trim();
+    }
+    // If no markdown block is found, return the original text, trimmed.
+    // JSON.parse will then handle it.
+    return text.trim();
+};
+
 const AIClinicalSummary: React.FC<AIClinicalSummaryProps> = ({ notes, patientName }) => {
     const [summary, setSummary] = useState<AISummary | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -29,7 +40,7 @@ const AIClinicalSummary: React.FC<AIClinicalSummaryProps> = ({ notes, patientNam
             .map(note => `Data: ${new Date(note.createdAt).toLocaleDateString('pt-BR')}\nAnotação: ${note.content}`)
             .join('\n\n---\n\n');
 
-        const systemPrompt = `Você é um assistente de IA para psicólogos. Sua tarefa é analisar anotações clínicas e retornar um resumo estruturado em formato JSON. Seja conciso, profissional e baseie-se estritamente nas informações fornecidas. Não invente detalhes.`;
+        const systemPrompt = `Você é um assistente de IA para psicólogos. Sua tarefa é analisar anotações clínicas e retornar um resumo estruturado em formato JSON. Seja conciso, profissional e baseie-se estritamente nas informações fornecidas. Não invente detalhes. A sua resposta DEVE conter APENAS o objeto JSON, sem nenhum texto adicional, explicação ou marcadores de markdown.`;
         
         const userPrompt = `Analise as seguintes anotações clínicas para o paciente ${patientName}.
     
@@ -41,7 +52,7 @@ ${notesContent}
 Retorne um objeto JSON com as seguintes chaves:
 - "summary": Um resumo conciso do progresso geral do paciente (máximo de 4 frases).
 - "themes": Uma lista de 3 a 5 temas ou tópicos principais que aparecem repetidamente nas anotações.
-- "suggestions": Uma lista de 2 a 3 sugestões de pontos a serem explorados ou técnicas a serem consideradas na próxima sessão, com base nos temas identificados.`;
+- "suggestions": Uma lista de 2 a 3 sugestões de ponto a serem explorados ou técnicas a serem consideradas na próxima sessão, com base nos temas identificados.`;
 
 
         try {
@@ -50,8 +61,9 @@ Retorne um objeto JSON com as seguintes chaves:
                 { role: 'user' as const, content: userPrompt }
             ];
             
-            const jsonResponse = await getOpenRouterCompletion(messages, true); // true for JSON mode
-            const parsedSummary: AISummary = JSON.parse(jsonResponse);
+            const responseText = await getOpenRouterCompletion(messages, true); // true for JSON mode
+            const jsonString = extractJsonFromString(responseText);
+            const parsedSummary: AISummary = JSON.parse(jsonString);
             setSummary(parsedSummary);
 
         } catch (err) {
