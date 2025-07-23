@@ -1,8 +1,10 @@
 
+
 import React from 'react';
 import { View } from '../types';
 import { useAppContext } from '../context/AppContext';
 import UserAvatar from './ui/UserAvatar';
+import Button from './ui/Button';
 
 interface SidebarProps {
   activeViewType: View['type'];
@@ -11,6 +13,8 @@ interface SidebarProps {
   setIsOpen: (isOpen: boolean) => void;
   unreadCount: number;
   onNotificationClick: () => void;
+  canInstall: boolean;
+  onInstallClick: () => void;
 }
 
 const NavIcon: React.FC<{ children: React.ReactNode; isActive: boolean }> = ({ children, isActive }) => (
@@ -27,7 +31,7 @@ const NavLabel: React.FC<{ label: string, isActive: boolean }> = ({ label, isAct
 
 const Sidebar: React.FC<SidebarProps> = ({ 
     activeViewType, onNavigate, isOpen, setIsOpen, 
-    unreadCount, onNotificationClick
+    unreadCount, onNotificationClick, canInstall, onInstallClick
 }) => {
   const { state, dispatch } = useAppContext();
   const { currentUser } = state;
@@ -90,6 +94,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           </ul>
         </nav>
         <div className="p-4 border-t border-gray-200">
+            {canInstall && (
+                <div className="mb-4">
+                    <Button onClick={onInstallClick} className="w-full bg-green-500 hover:bg-green-600">
+                        <DownloadIcon />
+                        Instalar Aplicativo
+                    </Button>
+                </div>
+            )}
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0 h-10 w-10">
                  <UserAvatar name={currentUser?.name || ''} />
@@ -113,6 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 };
 
 // SVG Icons
+const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm6-11a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
