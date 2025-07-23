@@ -4,7 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import Skeleton from '../ui/Skeleton';
 import { PatientView, Session } from '../../types';
 import Button from '../ui/Button';
-import JitsiMeetModal from '../features/JitsiMeetModal';
+import MirotalkModal from '../features/MirotalkModal';
 
 interface PatientDashboardViewProps {
   setView: (view: PatientView) => void;
@@ -102,7 +102,7 @@ const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({ setView }) 
                 </div>
             </div>
              {meetingSession && currentUser && (
-                <JitsiMeetModal 
+                <MirotalkModal 
                     session={meetingSession}
                     currentUser={currentUser}
                     onClose={() => setMeetingSession(null)}
