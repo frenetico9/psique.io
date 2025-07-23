@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useMemo } from 'react';
 import { Session } from '../../types';
 import { useAppContext } from '../../context/AppContext';
@@ -9,7 +10,7 @@ import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import SessionForm from '../forms/SessionForm';
 import Skeleton from '../ui/Skeleton';
-import JitsiMeetModal from '../features/JitsiMeetModal';
+import MirotalkModal from '../features/MirotalkModal';
 
 const statusStyles: Record<Session['status'], { bg: string, border: string, text: string }> = {
     scheduled: { bg: 'bg-blue-100', border: 'border-blue-500', text: 'text-blue-800' },
@@ -224,7 +225,7 @@ const CalendarView: React.FC = () => {
                 </Modal>
             )}
             {meetingSession && (
-                <JitsiMeetModal
+                <MirotalkModal
                     session={meetingSession}
                     currentUser={currentUser}
                     onClose={() => setMeetingSession(null)}
