@@ -9,25 +9,25 @@
   "scope": "/",
   "icons": [
     {
-      "src": "https://iili.io/Jb5y7Gs.png",
+      "src": "https://iili.io/FOD9dQI.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://iili.io/Jb5ySZF.png",
+      "src": "https://iili.io/FOD9dQI.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://iili.io/Jb5yUbv.png",
+      "src": "https://iili.io/FOD9dQI.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "https://iili.io/Jb5yX7p.png",
+      "src": "https://iili.io/FOD9dQI.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
