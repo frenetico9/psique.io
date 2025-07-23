@@ -1,98 +1,108 @@
-const CACHE_NAME = 'psique-io-cache-v1';
+// A robust service worker for PWA functionality.
+// This version is based on a proven, working example to ensure reliability.
+
+const CACHE_NAME = 'psique-io-cache-v2'; // Bumped version to force update
 const urlsToCache = [
   '/',
   '/index.html',
+  '/manifest.json', // Manifest is essential for PWA installability
+  '/index.css',     // This is linked in index.html
   '/favicon.svg',
-  '/index.tsx',
 
-  // CDN dependencies from importmap
+  // Key CDN assets
   'https://cdn.tailwindcss.com',
-  'https://esm.sh/react@^19.1.0/',
-  'https://esm.sh/react-dom@^19.1.0/',
-  'https://esm.sh/recharts@^3.1.0',
-  'https://esm.sh/axios@1.7.2',
-  'https://esm.sh/@google/genai',
-  'https://esm.sh/path@^0.12.7',
-  'https://esm.sh/vite@^7.0.5',
-  'https://esm.sh/url@^0.11.4',
-
-  // Fonts and images
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://iili.io/Fj3RQpf.png', // background image
-
-  // PWA Icons
-  'https://iili.io/Jb5y7Gs.png',
-  'https://iili.io/Jb5ySZF.png',
-  'https://iili.io/Jb5yUbv.png',
-  'https://iili.io/Jb5yX7p.png'
+  
+  // Core Images & Icons
+  'https://iili.io/Fj3RQpf.png', // Background image
+  'https://iili.io/Jb5y7Gs.png', // PWA Icon 192
+  'https://iili.io/Jb5ySZF.png', // PWA Icon 512
+  'https://iili.io/Jb5yUbv.png', // PWA Maskable Icon 192
+  'https://iili.io/Jb5yX7p.png'  // PWA Maskable Icon 512
 ];
+// Note: JavaScript modules from esm.sh will be cached on-the-fly by the fetch handler.
 
-// Install event: open a cache and add the app shell files to it
-self.addEventListener('install', event => {
+// Install: Open cache and add app shell files
+self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        // addAll is atomic, if one fails, all fail. We catch to prevent SW install failure.
+      .then((cache) => {
+        console.log('Service Worker: Caching app shell');
+        // Use addAll for atomic caching. We catch to prevent SW install from failing if one resource is unavailable.
         return cache.addAll(urlsToCache).catch(err => {
-          console.error('Failed to cache all URLs during install:', err);
+          console.error("Service Worker: Failed to cache some URLs during install.", err);
         });
       })
   );
 });
 
-// Fetch event: serve from cache or fetch from network
-self.addEventListener('fetch', event => {
-    if (event.request.method !== 'GET' || event.request.url.includes('openrouter.ai')) {
-        return;
-    }
-
-    event.respondWith(
-        caches.match(event.request)
-        .then(cachedResponse => {
-            // Cache hit - return response
-            if (cachedResponse) {
-              return cachedResponse;
-            }
-
-            // Not in cache - fetch from network
-            return fetch(event.request).then(
-              networkResponse => {
-                // Check if we received a valid response to cache
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type === 'error') {
-                    return networkResponse;
-                }
-                
-                const responseToCache = networkResponse.clone();
-
-                caches.open(CACHE_NAME)
-                  .then(cache => {
-                    cache.put(event.request, responseToCache);
-                  });
-
-                return networkResponse;
-              }
-            ).catch(error => {
-                console.error('Fetch failed:', error);
-            });
-        })
-    );
-});
-
-
-// Activate event: clean up old caches
-self.addEventListener('activate', event => {
+// Activate: Clean up old caches
+self.addEventListener('activate', (event) => {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
+            console.log('Service Worker: Deleting old cache', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
+  );
+  // Take control of the page immediately
+  return self.clients.claim();
+});
+
+// Fetch: Serve from cache, fallback to network, and provide offline fallback for navigation
+self.addEventListener('fetch', (event) => {
+  // We only cache GET requests. We also exclude API calls.
+  if (event.request.method !== 'GET' || event.request.url.includes('openrouter.ai')) {
+      return; // Let the browser handle non-GET requests and specified API calls.
+  }
+  
+  event.respondWith(
+    caches.match(event.request)
+      .then((response) => {
+        // Cache hit - return response
+        if (response) {
+          return response;
+        }
+
+        // Not in cache, go to network
+        return fetch(event.request).then(
+          (response) => {
+            // Check if we received a valid response to cache.
+            // We allow 'opaque' for CDN requests (no-cors).
+            if (
+              !response || 
+              response.status !== 200 || 
+              (response.type !== 'basic' && response.type !== 'opaque')
+            ) {
+              return response;
+            }
+
+            // IMPORTANT: Clone the response. A response is a stream
+            // and must be cloned to be consumed by both the cache and the browser.
+            const responseToCache = response.clone();
+
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return response;
+          }
+        ).catch(() => {
+          // Network request failed, probably offline.
+          // If it's a navigation request, serve the main app shell page as a fallback.
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+          // For other failed requests (e.g., images), we don't have a specific fallback,
+          // so the browser's default error will show.
+        });
+      })
   );
 });
