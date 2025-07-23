@@ -54,11 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <aside className={`w-64 flex-shrink-0 bg-slate-900 text-white flex flex-col fixed md:static inset-y-0 left-0 z-40 transform md:transform-none transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-20 flex items-center justify-center border-b border-slate-800">
-          <div className="flex items-center space-x-3">
-              <svg className="w-8 h-8 text-indigo-400" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2.5C12 2.5 6.5 5.5 6.5 12C6.5 18.5 12 21.5 12 21.5C12 21.5 17.5 18.5 17.5 12C17.5 5.5 12 2.5 12 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 12C13.6569 12 15 10.6569 15 9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9C9 10.6569 10.3431 12 12 12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+          <div className="flex items-center space-x-2">
+              <img src="https://iili.io/FOD9dQI.png" alt="Psique.IO Logo" className="w-8 h-8"/>
               <h1 className="text-xl font-bold tracking-wider">Psique<span className="font-light">.IO</span></h1>
           </div>
         </div>
