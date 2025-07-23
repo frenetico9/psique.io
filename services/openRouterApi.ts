@@ -27,7 +27,7 @@ export const getOpenRouterCompletion = async (messages: OpenRouterMessage[], jso
             messages: OpenRouterMessage[];
             response_format?: { type: string };
         } = {
-            model: "deepseek/deepseek-r1-0528:free",
+            model: "qwen/qwen-2.5-72b-instruct:free",
             messages: messages,
         };
 
