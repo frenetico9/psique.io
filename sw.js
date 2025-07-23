@@ -1,7 +1,7 @@
 // A robust service worker for PWA functionality.
 // This version is based on a proven, working example to ensure reliability.
 
-const CACHE_NAME = 'psique-cache-v4'; // Bumped version to force update
+const CACHE_NAME = 'psique-cache-v5'; // Bumped version to force update
 const urlsToCache = [
   '/',
   '/index.html',
@@ -15,11 +15,7 @@ const urlsToCache = [
   
   // Core Images & Icons
   'https://iili.io/Fj3RQpf.png', // Background image
-  'https://iili.io/FOD9dQI.png', // New Logo
-  'https://iili.io/FOD9dQI.png', // PWA Icon 192
-  'https://iili.io/FOD9dQI.png', // PWA Icon 512
-  'https://iili.io/FOD9dQI.png', // PWA Maskable Icon 192
-  'https://iili.io/FOD9dQI.png'  // PWA Maskable Icon 512
+  'https://iili.io/FOD9dQI.png', // PWA Logo / Icon
 ];
 // Note: JavaScript modules from esm.sh will be cached on-the-fly by the fetch handler.
 
