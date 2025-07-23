@@ -10,7 +10,6 @@ import Skeleton from '../ui/Skeleton';
 import UserAvatar from '../ui/UserAvatar';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import EmptyState from '../ui/EmptyState';
-import AIClinicalSummary from '../features/AIClinicalSummary';
 
 interface PatientDetailViewProps {
     patientId: string;
@@ -250,7 +249,7 @@ const PatientDetailSkeleton = () => (
 const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patientId, onBack }) => {
     const { state, dispatch } = useAppContext();
     const { sessions, sessionTypes, clinicalNotes, patients, loading } = state;
-    const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'notes' | 'ai_consultation' | 'ai_summary'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'sessions' | 'notes' | 'ai_consultation'>('overview');
     const toast = useToast();
 
     const patient = useMemo(() => patients.find(p => p.id === patientId), [patients, patientId]);
@@ -290,7 +289,6 @@ const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patientId, onBack
         { id: 'sessions', label: 'Sessões' },
         { id: 'notes', label: 'Anotações Clínicas' },
         { id: 'ai_consultation', label: 'Análise Inicial (IA)' },
-        { id: 'ai_summary', label: 'Resumo Clínico (IA)' },
     ];
     
     return (
@@ -407,7 +405,6 @@ const PatientDetailView: React.FC<PatientDetailViewProps> = ({ patientId, onBack
                         )}
                     </div>
                 )}
-                {activeTab === 'ai_summary' && <AIClinicalSummary notes={patientData.notes} patientName={patient.name} />}
             </div>
         </div>
     );
