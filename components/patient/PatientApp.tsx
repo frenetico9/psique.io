@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { PatientView } from '../../types';
 import { useAppContext } from '../../context/AppContext';
@@ -106,7 +107,7 @@ const PatientApp: React.FC = () => {
             <div className="flex justify-between items-center h-20">
                 {/* Logo */}
                 <div className="flex items-center">
-                    <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-18 w-auto"/>
+                    <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-40 w-auto"/>
                 </div>
 
                 {/* Desktop Navigation */}
