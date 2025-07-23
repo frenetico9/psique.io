@@ -1,0 +1,36 @@
+{
+  "name": "Psique.IO - Plataforma Inteligente para Psicólogos",
+  "short_name": "Psique.IO",
+  "description": "Uma plataforma de gestão completa para psicólogos, integrando agenda, prontuário e anotações para otimizar a prática clínica.",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#4F46E5",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "https://iili.io/Jb5y7Gs.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://iili.io/Jb5ySZF.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://iili.io/Jb5yUbv.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://iili.io/Jb5yX7p.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
