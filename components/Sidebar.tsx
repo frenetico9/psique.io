@@ -1,6 +1,4 @@
 
-
-
 import React from 'react';
 import { View } from '../types';
 import { useAppContext } from '../context/AppContext';
@@ -16,13 +14,13 @@ interface SidebarProps {
 }
 
 const NavIcon: React.FC<{ children: React.ReactNode; isActive: boolean }> = ({ children, isActive }) => (
-    <span className={`transition-colors duration-200 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`}>
+    <span className={`transition-colors duration-200 ${isActive ? 'text-indigo-600' : 'text-gray-500 group-hover:text-indigo-600'}`}>
       {children}
     </span>
 );
 
 const NavLabel: React.FC<{ label: string, isActive: boolean }> = ({ label, isActive }) => (
-    <span className={`transition-colors duration-200 ml-3 font-medium ${isActive ? 'text-white' : 'text-slate-300 group-hover:text-white'}`}>
+    <span className={`transition-colors duration-200 ml-3 ${isActive ? 'font-semibold text-indigo-700' : 'font-medium text-gray-700 group-hover:text-gray-900'}`}>
       {label}
     </span>
 );
@@ -54,9 +52,9 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={() => setIsOpen(false)}
       ></div>
 
-      <aside className={`w-64 flex-shrink-0 bg-slate-900 text-white flex flex-col fixed md:static inset-y-0 left-0 z-40 transform md:transform-none transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-24 flex items-center justify-center border-b border-slate-800 px-4">
-          <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-[4.5rem] w-auto"/>
+      <aside className={`w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col fixed md:static inset-y-0 left-0 z-40 transform md:transform-none transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="h-24 flex items-center justify-center border-b border-gray-200 px-4">
+          <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-[10rem] w-auto"/>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           <ul>
@@ -65,7 +63,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => onNavigate({ type: item.id } as View)}
                   className={`w-full flex items-center p-3 rounded-lg transition-all duration-200 group ${
-                    activeViewType === item.id ? 'bg-indigo-600 shadow-lg' : 'hover:bg-slate-700/50'
+                    activeViewType === item.id ? 'bg-indigo-50' : 'hover:bg-gray-100'
                   }`}
                 >
                   <NavIcon isActive={activeViewType === item.id}>{item.icon}</NavIcon>
@@ -73,11 +71,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </button>
               </li>
             ))}
-             <li className="!mt-4 border-t border-slate-800/50 pt-2">
+             <li className="!mt-4 border-t border-gray-200 pt-2">
                  <div className="relative">
                     <button
                         onClick={onNotificationClick}
-                        className="w-full flex items-center p-3 rounded-lg transition-all duration-200 group hover:bg-slate-700/50"
+                        className="w-full flex items-center p-3 rounded-lg transition-all duration-200 group hover:bg-gray-100"
                     >
                         <NavIcon isActive={false}><BellIcon/></NavIcon>
                         <NavLabel label="Notificações" isActive={false} />
@@ -91,19 +89,19 @@ const Sidebar: React.FC<SidebarProps> = ({
             </li>
           </ul>
         </nav>
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-gray-200">
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0 h-10 w-10">
                  <UserAvatar name={currentUser?.name || ''} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{currentUser?.name}</p>
-                <p className="text-xs text-slate-400 truncate">{currentUser?.email}</p>
+                <p className="text-sm font-semibold text-gray-800 truncate">{currentUser?.name}</p>
+                <p className="text-xs text-gray-500 truncate">{currentUser?.email}</p>
               </div>
             </div>
             <button
               onClick={handleLogout}
-              className="w-full mt-4 flex items-center justify-center py-2 px-4 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors duration-200 text-sm font-medium text-slate-300 hover:text-white"
+              className="w-full mt-4 flex items-center justify-center py-2 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200 text-sm font-medium text-gray-600 hover:text-gray-800"
             >
               <LogOutIcon />
               Sair
