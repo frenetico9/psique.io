@@ -105,11 +105,8 @@ const PatientApp: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
                 {/* Logo */}
-                <div className="flex items-center space-x-3">
-                    <svg className="w-8 h-8 text-indigo-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2.5C12 2.5 6.5 5.5 6.5 12C6.5 18.5 12 21.5 12 21.5C12 21.5 17.5 18.5 17.5 12C17.5 5.5 12 2.5 12 2.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 12C13.6569 12 15 10.6569 15 9C15 7.34315 13.6569 6 12 6C10.3431 6 9 7.34315 9 9C9 10.6569 10.3431 12 12 12Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
+                <div className="flex items-center space-x-2">
+                    <img src="https://iili.io/FOD9dQI.png" alt="Psique.IO Logo" className="w-8 h-8"/>
                     <h1 className="text-xl font-bold tracking-wider text-slate-800">Psique<span className="font-light">.IO</span></h1>
                 </div>
 
