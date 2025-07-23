@@ -1,6 +1,5 @@
-
 {
-  "name": "Psique.IO - Plataforma Inteligente para Psicólogos",
+  "name": "Plataforma Inteligente para Psicólogos",
   "description": "Uma plataforma de gestão completa para psicólogos, integrando agenda, prontuário de pacientes e anotações clínicas para otimizar a prática clínica.",
   "requestFramePermissions": [
     "camera",

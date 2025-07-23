@@ -1,7 +1,7 @@
 // A robust service worker for PWA functionality.
 // This version is based on a proven, working example to ensure reliability.
 
-const CACHE_NAME = 'psique-io-cache-v3'; // Bumped version to force update
+const CACHE_NAME = 'psique-cache-v4'; // Bumped version to force update
 const urlsToCache = [
   '/',
   '/index.html',

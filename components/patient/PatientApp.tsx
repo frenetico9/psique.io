@@ -105,9 +105,8 @@ const PatientApp: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-20">
                 {/* Logo */}
-                <div className="flex items-center space-x-2">
-                    <img src="https://iili.io/FOD9dQI.png" alt="Psique.IO Logo" className="w-8 h-8"/>
-                    <h1 className="text-xl font-bold tracking-wider text-slate-800">Psique<span className="font-light">.IO</span></h1>
+                <div className="flex items-center">
+                    <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-18 w-auto"/>
                 </div>
 
                 {/* Desktop Navigation */}

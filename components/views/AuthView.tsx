@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useAppContext } from '../../context/AppContext';
 import { useToast } from '../ui/Toaster';
@@ -36,9 +37,8 @@ const AuthView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-transparent flex flex-col justify-center items-center p-4">
-      <div className="flex items-center space-x-2 mb-8">
-        <img src="https://iili.io/FOD9dQI.png" alt="Psique.IO Logo" className="w-10 h-10"/>
-        <h1 className="text-3xl font-bold tracking-wider text-slate-800">Psique<span className="font-light">.IO</span></h1>
+      <div className="flex items-center justify-center mb-8">
+        <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-48 w-auto"/>
       </div>
       <div className="w-full max-w-md bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-2xl border border-white/20">
         {renderForm()}
@@ -49,7 +49,7 @@ const AuthView: React.FC = () => {
           </button>
         </p>
       </div>
-      <p className="text-xs text-slate-200 text-center mt-8 drop-shadow">© 2024 Psique.IO</p>
+      <p className="text-xs text-slate-200 text-center mt-8 drop-shadow">© 2024</p>
     </div>
   );
 };

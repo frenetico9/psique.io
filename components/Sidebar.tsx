@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { View } from '../types';
 import { useAppContext } from '../context/AppContext';
@@ -53,11 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       ></div>
 
       <aside className={`w-64 flex-shrink-0 bg-slate-900 text-white flex flex-col fixed md:static inset-y-0 left-0 z-40 transform md:transform-none transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-20 flex items-center justify-center border-b border-slate-800">
-          <div className="flex items-center space-x-2">
-              <img src="https://iili.io/FOD9dQI.png" alt="Psique.IO Logo" className="w-8 h-8"/>
-              <h1 className="text-xl font-bold tracking-wider">Psique<span className="font-light">.IO</span></h1>
-          </div>
+        <div className="h-24 flex items-center justify-center border-b border-slate-800 px-4">
+          <img src="https://iili.io/FOD9dQI.png" alt="Logo" className="h-20 w-auto"/>
         </div>
         <nav className="flex-1 px-4 py-6 space-y-1">
           <ul>

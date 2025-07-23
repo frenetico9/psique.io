@@ -45,11 +45,11 @@ const PatientDashboardView: React.FC<PatientDashboardViewProps> = ({ setView }) 
 
     return (
         <div className="space-y-8">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+            <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-800">
                     Bem-vindo(a) de volta, {currentUser?.name.split(' ')[0]}!
                 </h1>
-                <p className="mt-2 text-gray-600">
+                <p className="mt-1 text-gray-600">
                   {upcomingCount > 0 
                     ? `Você tem ${upcomingCount} ${upcomingCount > 1 ? 'sessões agendadas' : 'sessão agendada'}.` 
                     : `Você não tem nenhuma sessão agendada no momento.`}
