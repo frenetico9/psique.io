@@ -15,10 +15,10 @@ const urlsToCache = [
   
   // Core Images & Icons
   'https://iili.io/Fj3RQpf.png', // Background image
-  'https://iili.io/Jb5y7Gs.png', // PWA Icon 192
-  'https://iili.io/Jb5ySZF.png', // PWA Icon 512
-  'https://iili.io/Jb5yUbv.png', // PWA Maskable Icon 192
-  'https://iili.io/Jb5yX7p.png'  // PWA Maskable Icon 512
+  'https://iili.io/FOD9dQI.png', // PWA Icon 192
+  'https://iili.io/FOD9dQI.png', // PWA Icon 512
+  'https://iili.io/FOD9dQI.png', // PWA Maskable Icon 192
+  'https://iili.io/FOD9dQI.png'  // PWA Maskable Icon 512
 ];
 // Note: JavaScript modules from esm.sh will be cached on-the-fly by the fetch handler.
 
