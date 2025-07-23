@@ -8,7 +8,7 @@ import { updateSession } from '../../services/mockApi';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import PaymentModal from './PaymentModal';
-import JitsiMeetModal from '../features/JitsiMeetModal';
+import MirotalkModal from '../features/MirotalkModal';
 
 const statusBadge: Record<Session['status'], string> = {
     scheduled: "bg-blue-100 text-blue-800",
@@ -152,7 +152,7 @@ const PatientSessionsView: React.FC = () => {
                 />
             )}
              {meetingSession && currentUser && (
-                <JitsiMeetModal
+                <MirotalkModal
                     session={meetingSession}
                     currentUser={currentUser}
                     onClose={() => setMeetingSession(null)}
