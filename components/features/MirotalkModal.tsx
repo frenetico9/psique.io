@@ -2,19 +2,18 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { Session, User } from '../../types';
 
-interface VideoCallModalProps {
+interface MirotalkModalProps {
   session: Session;
   currentUser: User;
   onClose: () => void;
 }
 
-const VideoCallModal: React.FC<VideoCallModalProps> = ({ session, currentUser, onClose }) => {
-  // Construct the Mirotalk URL dynamically
-  // Room name based on session ID for uniqueness
-  const roomName = session.id.replace(/[^a-zA-Z0-9-_]/g, ''); // Sanitize room name
-  // URL-encode the user's name to handle spaces and special characters
-  const userName = encodeURIComponent(currentUser.name);
-  const miroTalkUrl = `https://sfu.mirotalk.com/${roomName}?username=${userName}&audio=1&video=1`;
+const MirotalkModal: React.FC<MirotalkModalProps> = ({ session, currentUser, onClose }) => {
+  // Cria um nome de sala único e seguro a partir do ID da sessão.
+  const roomName = `psiqueio-${session.id.replace(/[^a-zA-Z0-9-_]/g, '')}`;
+  
+  // Constrói a URL do Mirotalk com parâmetros para melhorar a experiência do usuário.
+  const mirotalkUrl = `https://p2p.mirotalk.com/join?room=${roomName}&name=${encodeURIComponent(currentUser.name)}&video=true&audio=true&screenSharing=true&chat=true&autoJoin=true`;
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 z-50 bg-gray-900 flex flex-col animate-fade-in">
@@ -26,8 +25,9 @@ const VideoCallModal: React.FC<VideoCallModalProps> = ({ session, currentUser, o
         </header>
         <main className="flex-1 w-full h-full bg-black">
            <iframe
-              src={miroTalkUrl}
-              allow="camera; microphone; fullscreen; display-capture"
+              title="Sessão de Videoconferência (Mirotalk)"
+              src={mirotalkUrl}
+              allow="camera; microphone; fullscreen; display-capture; autoplay"
               style={{ width: '100%', height: '100%', border: 'none' }}
             />
         </main>
@@ -43,4 +43,4 @@ const VideoCallModal: React.FC<VideoCallModalProps> = ({ session, currentUser, o
   );
 };
 
-export default VideoCallModal;
+export default MirotalkModal;
