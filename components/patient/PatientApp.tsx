@@ -10,12 +10,16 @@ import PatientProfileView from './PatientProfileView';
 import PatientScheduleView from './PatientScheduleView';
 import AIConsultationView from './AIConsultationView';
 import NotificationPanel from '../ui/NotificationPanel';
+import { usePWAInstall } from '../../context/usePWAInstall';
+import Button from '../ui/Button';
 
 // --- Bottom Navigation Component for Mobile ---
 const BottomNav: React.FC<{
   activeView: PatientView;
   onNavigate: (view: PatientView) => void;
-}> = ({ activeView, onNavigate }) => {
+  showInstall: boolean;
+  onInstallClick: () => void;
+}> = ({ activeView, onNavigate, showInstall, onInstallClick }) => {
   const navItems: { id: PatientView; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Início', icon: <HomeIcon /> },
     { id: 'schedule', label: 'Agendar', icon: <CalendarPlusIcon /> },
@@ -40,6 +44,15 @@ const BottomNav: React.FC<{
                     <span className="text-xs font-medium">{item.label}</span>
                 </button>
             ))}
+            {showInstall && (
+                 <button
+                    onClick={onInstallClick}
+                    className="flex flex-col items-center justify-center w-full h-full gap-1 transition-colors duration-200 text-green-600 hover:text-green-700"
+                >
+                    <DownloadIcon />
+                    <span className="text-xs font-medium">Instalar</span>
+                </button>
+            )}
         </div>
     </nav>
   );
@@ -51,6 +64,7 @@ const PatientApp: React.FC = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { state, dispatch } = useAppContext();
   const { currentUser, notifications } = state;
+  const { canInstall, handleInstallClick } = usePWAInstall();
 
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
@@ -132,6 +146,11 @@ const PatientApp: React.FC = () => {
 
                 {/* User Menu */}
                 <div className="flex items-center space-x-2 sm:space-x-4">
+                    {canInstall && (
+                        <Button onClick={handleInstallClick} size="sm" className="hidden sm:flex bg-green-500 hover:bg-green-600">
+                            <DownloadIcon /> <span className="ml-2">Instalar App</span>
+                        </Button>
+                    )}
                     <div className="relative">
                         <button onClick={() => setIsNotificationsOpen(o => !o)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 relative" title="Notificações">
                            <BellIcon />
@@ -155,7 +174,7 @@ const PatientApp: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderView()}
       </main>
-      <BottomNav activeView={activeView} onNavigate={setActiveView} />
+      <BottomNav activeView={activeView} onNavigate={setActiveView} showInstall={canInstall} onInstallClick={handleInstallClick} />
       
       <NotificationPanel 
           isOpen={isNotificationsOpen}
@@ -170,6 +189,7 @@ const PatientApp: React.FC = () => {
 };
 
 // Icons
+const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
 const LogOutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
