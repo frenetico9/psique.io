@@ -1,6 +1,6 @@
 
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { PatientView } from '../../types';
 import { useAppContext } from '../../context/AppContext';
 import UserAvatar from '../ui/UserAvatar';
@@ -10,16 +10,12 @@ import PatientProfileView from './PatientProfileView';
 import PatientScheduleView from './PatientScheduleView';
 import AIConsultationView from './AIConsultationView';
 import NotificationPanel from '../ui/NotificationPanel';
-import { usePWAInstall } from '../../context/usePWAInstall';
-import Button from '../ui/Button';
 
 // --- Bottom Navigation Component for Mobile ---
 const BottomNav: React.FC<{
   activeView: PatientView;
   onNavigate: (view: PatientView) => void;
-  showInstall: boolean;
-  onInstallClick: () => void;
-}> = ({ activeView, onNavigate, showInstall, onInstallClick }) => {
+}> = ({ activeView, onNavigate }) => {
   const navItems: { id: PatientView; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'Início', icon: <HomeIcon /> },
     { id: 'schedule', label: 'Agendar', icon: <CalendarPlusIcon /> },
@@ -44,15 +40,6 @@ const BottomNav: React.FC<{
                     <span className="text-xs font-medium">{item.label}</span>
                 </button>
             ))}
-            {showInstall && (
-                 <button
-                    onClick={onInstallClick}
-                    className="flex flex-col items-center justify-center w-full h-full gap-1 transition-colors duration-200 text-green-600 hover:text-green-700"
-                >
-                    <DownloadIcon />
-                    <span className="text-xs font-medium">Instalar</span>
-                </button>
-            )}
         </div>
     </nav>
   );
@@ -62,11 +49,22 @@ const BottomNav: React.FC<{
 const PatientApp: React.FC = () => {
   const [activeView, setActiveView] = useState<PatientView>('dashboard');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { state, dispatch } = useAppContext();
   const { currentUser, notifications } = state;
-  const { canInstall, handleInstallClick } = usePWAInstall();
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
       dispatch({ type: 'LOGOUT' });
@@ -146,11 +144,6 @@ const PatientApp: React.FC = () => {
 
                 {/* User Menu */}
                 <div className="flex items-center space-x-2 sm:space-x-4">
-                    {canInstall && (
-                        <Button onClick={handleInstallClick} size="sm" className="hidden sm:flex bg-green-500 hover:bg-green-600">
-                            <DownloadIcon /> <span className="ml-2">Instalar App</span>
-                        </Button>
-                    )}
                     <div className="relative">
                         <button onClick={() => setIsNotificationsOpen(o => !o)} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 relative" title="Notificações">
                            <BellIcon />
@@ -161,12 +154,52 @@ const PatientApp: React.FC = () => {
                             }
                         </button>
                     </div>
-                    <div className="h-10 w-10">
+                    <div className="relative" ref={userMenuRef}>
+                      <button
+                        onClick={() => setIsUserMenuOpen((o) => !o)}
+                        className="h-10 w-10 block rounded-full overflow-hidden border-2 border-transparent hover:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition"
+                        aria-label="Menu do usuário"
+                        aria-haspopup="true"
+                        aria-expanded={isUserMenuOpen}
+                      >
                         <UserAvatar name={currentUser.name} />
+                      </button>
+
+                      {isUserMenuOpen && (
+                        <div
+                          className="absolute right-0 mt-2 w-56 origin-top-right bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5 z-40"
+                          role="menu"
+                          aria-orientation="vertical"
+                          aria-labelledby="user-menu-button"
+                        >
+                          <div className="px-4 py-3 border-b border-gray-100" role="none">
+                                <p className="text-sm font-semibold text-gray-800 truncate" role="none">{currentUser.name}</p>
+                                <p className="text-xs text-gray-500 truncate" role="none">{currentUser.email}</p>
+                          </div>
+                          <div className="py-1" role="none">
+                            <button
+                              onClick={() => {
+                                setActiveView('profile');
+                                setIsUserMenuOpen(false);
+                              }}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              role="menuitem"
+                            >
+                                <UserCircleIcon className="w-5 h-5 text-gray-500"/>
+                                <span>Meu Perfil</span>
+                            </button>
+                            <button
+                              onClick={handleLogout}
+                              className="w-full text-left flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                              role="menuitem"
+                            >
+                                <LogOutIcon className="w-5 h-5"/>
+                                <span>Sair</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <button onClick={handleLogout} className="p-2 rounded-full text-gray-500 hover:bg-gray-100 hidden sm:block" title="Sair">
-                        <LogOutIcon />
-                    </button>
                 </div>
             </div>
         </div>
@@ -174,7 +207,7 @@ const PatientApp: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {renderView()}
       </main>
-      <BottomNav activeView={activeView} onNavigate={setActiveView} showInstall={canInstall} onInstallClick={handleInstallClick} />
+      <BottomNav activeView={activeView} onNavigate={setActiveView} />
       
       <NotificationPanel 
           isOpen={isNotificationsOpen}
@@ -189,11 +222,10 @@ const PatientApp: React.FC = () => {
 };
 
 // Icons
-const DownloadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>;
-const LogOutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+const LogOutIcon: React.FC<{className?: string}> = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-6 w-6'} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>;
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
-const UserCircleIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+const UserCircleIcon: React.FC<{className?: string}> = ({className}) => <svg xmlns="http://www.w3.org/2000/svg" className={className || 'h-6 w-6'} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
 const BellIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
 const CalendarPlusIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14v4m-2-2h4" /></svg>;
 const SparklesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>;
